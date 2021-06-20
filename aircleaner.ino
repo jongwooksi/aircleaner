@@ -1,3 +1,5 @@
+
+
 #include <SPI.h>
 #include <SD.h>
 #include <FS.h>
@@ -66,6 +68,12 @@ const uint8_t img_rgb888_320_240_head[54] = {
 int img_index = 0;
 int pos[2] = {0, 0};
 int stream_flag = 1;
+int volume = 0;
+int stage = 0;
+int conn = 0;
+
+const char* ssid = "jongwooksi"; 
+const char* password = "0000000000";
 
 SoftwareSerial dustSensor(DUST_RX, DUST_TX); // RX, TX
               
@@ -78,28 +86,142 @@ void setup()
 }
 
 
-void loop()
+void setBackground()
 {
-    get_pos(pos);
-    pos_rotation(pos, SCRENN_ROTATION);
+  tft.setRotation(1);
+  SPI_OFF_TFT;
+  delay(10);
+    
+  if (stage == 0)
+    print_img(SD, "/back.bmp", 480, 320);
 
+  else if (stage == 1)
+    print_img(SD, "/logo.bmp", 480, 320);
+
+  SPI_ON_TFT;
+  delay(1000);
+  tft.setRotation(3);
+}
+
+
+void touchDisplaySet()
+{
+  if (stage == 0)
+  {
     if (320 < pos[0] && pos[0] < 480)
     {
         if (10 < pos[1] && pos[1] < 80)
           airPollution();
 
         if (pos[1] > 90 && pos[1] < 150)
-          show_log(2);
+          checkDust();
             
         if (pos[1] < 230 && pos[1] > 160)
           show_log(3);
 
         if (pos[1] < 310 && pos[1] > 240)
         {
-          checkDust();
-        }
-        
+          setting();
+        }       
     }
+  }
+
+  else if (stage == 1)
+  {
+    if (160 < pos[0] && pos[0] < 320)
+    {
+        if (120 < pos[1] && pos[1] < 240)
+          stage = 0;
+          setBackground();
+          draw_button();
+          drawConnect();
+
+    }
+    
+  }
+  
+}
+
+void setting()
+{
+  stage = 1;
+  setBackground();
+}
+
+void drawConnect()
+{
+  tft.setCursor(20, 40);
+
+  if (conn == 0)
+    tft.println("Not connected");
+  else
+    tft.println("connected");
+    
+}
+
+void setTime()
+{
+  configTime(9 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+  Serial.println("\nWaiting for time");
+  
+  while (!time(nullptr)) {
+    Serial.print(".");
+    delay(100);
+  }
+  
+  Serial.println("");
+  
+}
+
+void drawTime()
+{
+  String date[6];
+    
+  time_t now = time(nullptr);
+  struct tm * timeinfo;
+  timeinfo = localtime(&now); 
+
+  date[0] = String(timeinfo->tm_year+1900, DEC);
+  date[1] = String(timeinfo->tm_mon+1, DEC);
+  date[2] = String(timeinfo->tm_mday, DEC);
+  date[3] = String(timeinfo->tm_hour, DEC); 
+  date[4] = String(timeinfo->tm_min, DEC); 
+  date[5] = String(timeinfo->tm_sec, DEC); 
+  
+   
+  if(timeinfo->tm_sec<10)      date[5]="0"+date[5];
+  if(timeinfo->tm_min<10)      date[4]="0"+date[4];
+  if(timeinfo->tm_hour<10)     date[3]="0"+date[3];
+  if(timeinfo->tm_mday<10)     date[2]="0"+date[2];
+  if(timeinfo->tm_mon<10)      date[1]="0"+date[1];
+  
+
+  tft.setTextColor(TFT_BLACK);
+  tft.fillRect(20, 300, 200, 20, TFT_WHITE);
+  tft.setTextSize(1);
+
+  tft.drawString(date[0]+"-", 20, 300);
+  tft.drawString(date[1]+"-", 50, 300);
+  tft.drawString(date[2]+" ", 70, 300);
+  tft.drawString(date[3]+":", 90, 300);
+  tft.drawString(date[4]+":", 110, 300);
+  tft.drawString(date[5], 130, 300);
+
+  Serial.println(ctime(&now));
+  
+}
+void loop()
+{
+  get_pos(pos);
+  pos_rotation(pos, SCRENN_ROTATION);
+  touchDisplaySet();
+ 
+  if ((conn == 1) && (stage==0))
+  {
+    delay(100);
+    drawTime(); 
+  }
+     
 }
 
 void dustSensor_init()
@@ -118,6 +240,8 @@ void checkDust()
       tft.fillRect(160, 160, 160, 160, TFT_WHITE);
       tft.setCursor(180, 180);
       tft.println(dustSensor.available());
+      tft.setTextColor(TFT_RED);
+      tft.setTextSize(2);
       
       if(dustSensor.available()>=32){
         int dustlength = dustSensor.available();
@@ -167,11 +291,6 @@ void checkDust()
   
         tft.setCursor(250, 240);
         tft.println(PM10);
-
-        tft.setCursor(250, 270);
-        tft.println(pms[0]);
-        tft.setCursor(250, 300);
-        tft.println(pms[1]);
 
 
         DUST_OFF_TX;
@@ -251,7 +370,7 @@ void wifi_init()
     // wait for WiFi connection
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin("jongwooksi", "0000000000");
+    WiFi.begin(ssid,password);
 
     //while (WiFi.status() != WL_CONNECTED)
     for (int i = 0; i < 100; i++)
@@ -271,8 +390,10 @@ void wifi_init()
     {
       Serial.println("connected to server");
       tft.setCursor(20, 40);
-      tft.println("connected");
-  
+      
+      conn = 1;
+      drawConnect();
+      setTime();
     }
   
     //if (!client.connected()) 
@@ -283,8 +404,8 @@ void wifi_init()
   
       client.stop();
   
-      tft.setCursor(20, 40);
-      tft.println("Not connected");
+      conn = 0;
+      drawConnect();
   
     }
 
@@ -488,13 +609,13 @@ void draw_button()
     tft.println("Air pollution");
 
     tft.setCursor(340, 120);
-    tft.println("Motor On");
+    tft.println("Indoor Dust");
 
     tft.setCursor(340, 190);
-    tft.println("Motor Off");
+    tft.println("Pan Motor");
 
     tft.setCursor(340, 260);
-    tft.println("Indoor Dust ");
+    tft.println("Setting");
     
     SPI_OFF_TFT;
 }
@@ -511,15 +632,24 @@ void show_log(int cmd_type)
 
     switch (cmd_type)
     {
-      case 2:
-          tft.fillRect(160, 160, 160, 160, TFT_WHITE);
-          tft.println("Motor ON");
-  
-          break;
-
       case 3:
           tft.fillRect(160, 160, 160, 160, TFT_WHITE);
-          tft.println("Motor OFF");
+
+          if (volume == 5)
+            volume = -1;
+
+          volume++;
+          
+          tft.println("Air Volume: ");
+          tft.setCursor(180, 210);      
+          tft.println(volume);
+          
+          
+          break;
+
+      case 4:
+          tft.fillRect(160, 160, 160, 160, TFT_WHITE);
+          tft.println("Setting");
   
           break;
 
