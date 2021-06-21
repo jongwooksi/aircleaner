@@ -71,6 +71,26 @@ int stream_flag = 1;
 int volume = 0;
 int stage = 0;
 int conn = 0;
+int year = 0;
+int mon = 0;
+int day = 0;
+int wday = 0;
+int startwday = -1;
+int endwday = -1;
+
+int days[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
+
+const char *wname[7] = { "Sun","Mon","Tue","Wed","Thr","Fri","Sat" };
+const char *bars[2] = 
+{
+
+    "======================================\n",
+
+    "--------------------------------------\n"
+
+};
+
+
 
 const char* ssid = "jongwooksi"; 
 const char* password = "0000000000";
@@ -122,6 +142,7 @@ void touchDisplaySet()
         if (pos[1] < 310 && pos[1] > 240)
         {
           setting();
+          drawCalendar(year, mon);
         }       
     }
   }
@@ -137,10 +158,112 @@ void touchDisplaySet()
           drawConnect();
 
     }
-    
+
+    if (0 < pos[1] && pos[1] < 50)
+    {
+        if (400 < pos[0] && pos[0] < 480)
+        {
+          setting();  
+          drawCalendar(year, ++mon);
+        }
+          
+        else if (0 < pos[0] && pos[0] < 80)
+        {
+          setting();
+          //drawCalendar(year, --mon);
+        }
+          
+        
+    }
   }
   
 }
+
+
+void drawCalendar(int y, int m)
+{
+  if ((year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0)))
+    days[1] = 29;
+
+  tft.setTextSize(2);
+  tft.setCursor(200, 20);
+  tft.println(y);
+  tft.setCursor(260, 20);
+  tft.println("/");
+
+  tft.setCursor(280, 20);
+  tft.println(m);
+ 
+  tft.setCursor(10, 40);
+  tft.println(bars[0]);
+
+  for (int i = 0; i<7; i++)
+  {
+    if (i == 0)
+      tft.setTextColor(TFT_RED);
+
+    else if (i == 6)
+      tft.setTextColor(TFT_BLUE);
+
+    else
+      tft.setTextColor(TFT_BLACK);
+        
+    tft.setCursor( 50 + 60*i, 60);
+    tft.println(wname[i]);
+  }
+  
+  tft.setTextColor(TFT_BLACK);
+  tft.setCursor(10, 80);
+  tft.println(bars[1]);
+
+  int start = wday - (day - 1);
+  int space = 0;
+
+  
+  while (start < 0)
+    start = start+ 7;
+
+  if (endwday != -1)
+    start = endwday;
+
+    
+  for (int i = 0; i<days[m-1]; i++)
+  {
+      if (i < 9)
+        tft.setCursor( 60 + 60*(start), 100+35*space);
+
+      else
+        tft.setCursor( 50 + 60*(start), 100+35*space);
+
+
+      if (start == 0)
+        tft.setTextColor(TFT_RED);
+
+      else if (start == 6)
+        tft.setTextColor(TFT_BLUE);
+
+      else
+        tft.setTextColor(TFT_BLACK);
+        
+      tft.println(i+1);
+  
+      start++;
+      
+      if (start == 7)
+      {
+          start = 0;
+          space++;      
+      }
+
+      endwday = start;
+  }
+  tft.setTextColor(TFT_BLACK);
+  tft.setCursor(10, 300);
+  tft.println(bars[0]);
+
+
+}
+
 
 void setting()
 {
@@ -173,6 +296,7 @@ void setTime()
   
 }
 
+
 void drawTime()
 {
   String date[6];
@@ -181,6 +305,11 @@ void drawTime()
   struct tm * timeinfo;
   timeinfo = localtime(&now); 
 
+  year = timeinfo->tm_year+1900;
+  mon = timeinfo->tm_mon+1;
+  day = timeinfo->tm_mday;  
+  wday = timeinfo->tm_wday;
+  
   date[0] = String(timeinfo->tm_year+1900, DEC);
   date[1] = String(timeinfo->tm_mon+1, DEC);
   date[2] = String(timeinfo->tm_mday, DEC);
@@ -373,7 +502,7 @@ void wifi_init()
     WiFi.begin(ssid,password);
 
     //while (WiFi.status() != WL_CONNECTED)
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 300; i++)
     {
         Serial.print(".");
         delay(50);
