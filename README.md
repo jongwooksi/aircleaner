@@ -4,6 +4,8 @@
 
 Baseline : https://github.com/Makerfabs/Project_Touch-Screen-Camera
 
+20210621
+- Setting내의 화면 전환시 달력 출력 기능 추가
 
 20210620
 - 버튼 순서 변경
