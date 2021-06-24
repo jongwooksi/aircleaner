@@ -79,7 +79,10 @@ int startwday = -1;
 int endwday = -1;
 bool initWashFlag = true;
 
-int scheduledMonth = 3;
+int t_mon = 0;
+int t_year = 0;
+
+int scheduledMonth = 3; // initilalized value
 int scheduledDate[5] = {0};
 
 int days[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
@@ -105,6 +108,44 @@ void setup()
     wifi_init();
     dustSensor_init();
     
+}
+
+void loop()
+{
+  get_pos(pos);
+  pos_rotation(pos, SCRENN_ROTATION);
+  touchDisplaySet();
+ 
+  if ((conn == 1) && (stage==0))
+  {
+    delay(100);
+    drawTime(); 
+  }
+
+  if (initWashFlag)
+  {
+    if (year != 1970)
+    {
+      initScheduledWashing();
+      updateScheduledWash(3);
+      t_mon = mon;
+    } 
+  }
+
+  else
+  {
+    if (checkDateWash())
+      tft.println("alarm"); // will insert code ASAP 
+  }
+}
+
+bool checkDateWash()
+{
+  if ((scheduledDate[0] == year)&&(scheduledDate[1] == mon)&&(scheduledDate[1] == day))
+    return true;
+
+  else
+    return false;
 }
 
 void setBackground()
@@ -152,21 +193,26 @@ void touchDisplaySet()
         if (pos[1] < 310 && pos[1] > 240)
         {
           stage = 1;
-          setBackground();
-          
+          setBackground();    
         }       
     }
   }
 
   else if (stage == 1) // menu
   {
+    tft.setTextColor(TFT_BLACK);
+    tft.setTextSize(3);
+    
+    tft.setCursor(130, 30);
+    tft.println("Setting Menu");
+    
     if (100 < pos[1] && pos[1] < 220)
     {
         if (30 < pos[0] && pos[0] < 150)
         {
           stage = 2;
           setBackground();
-          drawCalendar(year, mon);
+          drawCalendar(year, mon, 0);
         }
                  
         else if (180 < pos[0] && pos[0] < 300)
@@ -201,6 +247,8 @@ void touchDisplaySet()
 
   else if (stage == 2)
   {
+    
+    
     if (160 < pos[0] && pos[0] < 320)
     {
         if (120 < pos[1] && pos[1] < 240)
@@ -216,14 +264,13 @@ void touchDisplaySet()
         if (400 < pos[0] && pos[0] < 480)
         {
           setBackground();
-          drawCalendar(year, ++mon);
+          drawCalendar(year, t_mon+1, 1);
         }
           
         else if (0 < pos[0] && pos[0] < 80)
         {
-          //stage = 1;
           setBackground();
-          //drawCalendar(year, --mon);
+          drawCalendar(year, t_mon-1, -1);
         }
           
         
@@ -264,11 +311,7 @@ void touchDisplaySet()
           stage = 1;
           setBackground();
         }
-    }
-
-
-
-    
+    }  
   }
   
   else if (stage == 4)
@@ -279,8 +322,7 @@ void touchDisplaySet()
         {
           stage = 1;
           setBackground();
-        }
-          
+        }   
     }
   }
   
@@ -317,7 +359,7 @@ void updateScheduledWash(int s_mon)
     
   scheduledMonth = s_mon;
 
-  if (mon + scheduledMonth > 12)
+  if ((mon + scheduledMonth) > 12)
   {
     scheduledDate[0] = year + 1;
     scheduledDate[1] = mon + scheduledMonth - 12;
@@ -331,11 +373,23 @@ void updateScheduledWash(int s_mon)
   
 }
 
-void drawCalendar(int y, int m)
+void drawCalendar(int y, int m, int direct)
 {
   if (conn == 0)
     return;
+
+  if (m == 13)
+  {
+    m = 1;
+    y += 1;
+  }
     
+  else if (m == 0)
+  {
+    m = 12;
+    y -= 1;
+  }
+
   if ((year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0)))
     days[1] = 29;
 
@@ -373,14 +427,23 @@ void drawCalendar(int y, int m)
   int start = wday - (day - 1);
   int space = 0;
 
+  if (direct == 0)
+    while (start < 0)
+      start = start+ 7;
   
-  while (start < 0)
-    start = start+ 7;
+  if ((direct == 1)&& (endwday != -1))
+      start = endwday;
 
-  if (endwday != -1)
-    start = endwday;
-
-    
+  else if ((direct == -1)&& (startwday != -1))
+  {
+    start = startwday - days[m-1] ;
+      while (start < 0)
+        start = start+ 7;
+  }
+      
+      
+  startwday = start;
+   
   for (int i = 0; i<days[m-1]; i++)
   {
       if (i < 9)
@@ -410,12 +473,15 @@ void drawCalendar(int y, int m)
       }
 
       endwday = start;
+      
   }
+  
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(10, 300);
   tft.println(bars[0]);
 
-
+  t_mon = m;
+  t_year = y;
 }
 
 
@@ -436,7 +502,7 @@ void setTime()
   configTime(9 * 3600, 0, "pool.ntp.org", "time.nist.gov");
   Serial.println("\nWaiting for time");
   
-  while (!time(nullptr)) {
+  while (!time(nullptr)){
     Serial.print(".");
     delay(100);
   }
@@ -488,36 +554,17 @@ void drawTime()
   Serial.println(ctime(&now));
   
 }
-void loop()
-{
-  get_pos(pos);
-  pos_rotation(pos, SCRENN_ROTATION);
-  touchDisplaySet();
- 
-  if ((conn == 1) && (stage==0))
-  {
-    delay(100);
-    drawTime(); 
-  }
 
-  if (initWashFlag)
-  {
-    initScheduledWashing();
-    updateScheduledWash(3);
-  }
-    
-}
 
 void initScheduledWashing()
 {
   initWashFlag = false;
-
+  
   scheduledDate[0] = year;
   scheduledDate[1] = mon;
   scheduledDate[2] = day;
   scheduledDate[3] = 0;
   scheduledDate[4] = 0;
-  
 }
 
 void dustSensor_init()
@@ -550,16 +597,16 @@ void checkDust()
         }
 
         if( ((pms[0] != 0x42)) || ( (pms[1] != 0x4d)) ) 
-         {
-            Serial.printf("Invalid Header \n");
-            continue;
-         }
+        {
+          Serial.printf("Invalid Header \n");
+          continue;
+        }
 
-         if (pms[29] != 0x00)
-         {
-            Serial.printf("Error Code 0 \n");
-            continue;
-         }
+        if (pms[29] != 0x00)
+        {
+          Serial.printf("Error Code 0 \n");
+          continue;
+        }
         
         int PM1_0=(pms[10]<<8)|pms[11];
         int PM2_5=(pms[12]<<8)|pms[13];
@@ -923,18 +970,18 @@ void draw_button()
       tft.setTextSize(3);
     
       tft.setCursor(150, 30);
-      tft.println("Schduled Washing");
+      tft.println("Scheduled Washing");
       
       tft.setTextColor(TFT_WHITE);
       tft.setTextSize(1.5);
     
-      tft.setCursor(50, 160);
+      tft.setCursor(55, 160);
       tft.println("+ 1 month");
   
       tft.setCursor(200, 160);
       tft.println("+ 3 month");
   
-      tft.setCursor(350, 160);
+      tft.setCursor(345, 160);
       tft.println("+ 6 month");
       
     }
@@ -969,14 +1016,7 @@ void show_log(int cmd_type)
           
           break;
 
-      case 4:
-          tft.fillRect(160, 160, 160, 160, TFT_WHITE);
-          tft.println("Setting");
-  
-          break;
-
     default:
-
         break;
 
     }
