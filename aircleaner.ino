@@ -71,9 +71,9 @@ int stream_flag = 1;
 int volume = 0;
 int stage = 0;
 int conn = 0;
-int year = 0;
-int mon = 0;
-int day = 0;
+int year = -1;
+int mon = -1;
+int day = -1;
 int wday = 0;
 int startwday = -1;
 int endwday = -1;
@@ -134,14 +134,18 @@ void loop()
 
   else
   {
-    if (checkDateWash())
+    if (checkDateWash() )
+    {
       tft.println("alarm"); // will insert code ASAP 
+      initWashFlag = true;
+    }
+     
   }
 }
 
 bool checkDateWash()
 {
-  if ((scheduledDate[0] == year)&&(scheduledDate[1] == mon)&&(scheduledDate[1] == day))
+  if ((scheduledDate[0] == year)&&(scheduledDate[1] == mon)&&(scheduledDate[1] == day)&& (conn == 1))
     return true;
 
   else
@@ -170,7 +174,7 @@ void setBackground()
     tft.fillScreen(TFT_WHITE);
     
   SPI_ON_TFT;
-  delay(1000);
+  delay(100);
   tft.setRotation(3);
 }
 
@@ -264,13 +268,13 @@ void touchDisplaySet()
         if (400 < pos[0] && pos[0] < 480)
         {
           setBackground();
-          drawCalendar(year, t_mon+1, 1);
+          drawCalendar(t_year, t_mon+1, 1);
         }
           
         else if (0 < pos[0] && pos[0] < 80)
         {
           setBackground();
-          drawCalendar(year, t_mon-1, -1);
+          drawCalendar(t_year, t_mon-1, -1);
         }
           
         
@@ -488,6 +492,9 @@ void drawCalendar(int y, int m, int direct)
 
 void drawConnect()
 {
+  tft.setCursor(20, 20);
+  tft.println("WIFI");
+   
   tft.setCursor(20, 40);
 
   if (conn == 0)
@@ -515,7 +522,12 @@ void setTime()
 void drawTime()
 {
   String date[6];
-    
+
+  tft.setTextColor(TFT_BLACK);
+  tft.fillRect(20, 300, 200, 20, TFT_WHITE);
+  tft.setTextSize(1);
+
+  
   time_t now = time(nullptr);
   struct tm * timeinfo;
   timeinfo = localtime(&now); 
@@ -524,6 +536,12 @@ void drawTime()
   mon = timeinfo->tm_mon+1;
   day = timeinfo->tm_mday;  
   wday = timeinfo->tm_wday;
+
+  if (year == 1970)
+  {
+    tft.drawString("Time connecting...", 20, 300);
+    return ;
+  }
   
   date[0] = String(timeinfo->tm_year+1900, DEC);
   date[1] = String(timeinfo->tm_mon+1, DEC);
@@ -539,10 +557,6 @@ void drawTime()
   if(timeinfo->tm_mday<10)     date[2]="0"+date[2];
   if(timeinfo->tm_mon<10)      date[1]="0"+date[1];
   
-
-  tft.setTextColor(TFT_BLACK);
-  tft.fillRect(20, 300, 200, 20, TFT_WHITE);
-  tft.setTextSize(1);
 
   tft.drawString(date[0]+"-", 20, 300);
   tft.drawString(date[1]+"-", 50, 300);
@@ -585,7 +599,7 @@ void checkDust()
       tft.println(dustSensor.available());
       tft.setTextColor(TFT_RED);
       tft.setTextSize(2);
-      
+      delay(100);
       if(dustSensor.available()>=32){
         int dustlength = dustSensor.available();
         int check = 0;
@@ -602,11 +616,12 @@ void checkDust()
           continue;
         }
 
+        /*
         if (pms[29] != 0x00)
         {
           Serial.printf("Error Code 0 \n");
           continue;
-        }
+        }*/
         
         int PM1_0=(pms[10]<<8)|pms[11];
         int PM2_5=(pms[12]<<8)|pms[13];
@@ -955,13 +970,13 @@ void draw_button()
       tft.println("Air pollution");
   
       tft.setCursor(340, 120);
-      tft.println("Indoor Dust");
+      tft.println(" Indoor Dust");
   
       tft.setCursor(340, 190);
-      tft.println("Pan Motor");
+      tft.println("  Pan Motor");
   
       tft.setCursor(340, 260);
-      tft.println("Setting");
+      tft.println("   Setting");
     }
     
     else if (stage == 3)
