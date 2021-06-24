@@ -77,6 +77,10 @@ int day = 0;
 int wday = 0;
 int startwday = -1;
 int endwday = -1;
+bool initWashFlag = true;
+
+int scheduledMonth = 3;
+int scheduledDate[5] = {0};
 
 int days[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
 
@@ -89,8 +93,6 @@ const char *bars[2] =
     "--------------------------------------\n"
 
 };
-
-
 
 const char* ssid = "jongwooksi"; 
 const char* password = "0000000000";
@@ -105,19 +107,27 @@ void setup()
     
 }
 
-
 void setBackground()
 {
   tft.setRotation(1);
   SPI_OFF_TFT;
   delay(10);
     
-  if (stage == 0)
+  if (stage == 0) // main
     print_img(SD, "/back.bmp", 480, 320);
 
-  else if (stage == 1)
-    print_img(SD, "/logo.bmp", 480, 320);
+  else if (stage == 1)// setting
+    print_img(SD, "/setting.bmp", 480, 320);
 
+  else if (stage == 2) // calender
+    tft.fillScreen(TFT_WHITE);
+  
+  else if (stage == 3) // wash
+    print_img(SD, "/wash.bmp", 480, 320);
+  
+  else if (stage == 4) // information
+    tft.fillScreen(TFT_WHITE);
+    
   SPI_ON_TFT;
   delay(1000);
   tft.setRotation(3);
@@ -141,47 +151,191 @@ void touchDisplaySet()
 
         if (pos[1] < 310 && pos[1] > 240)
         {
-          setting();
-          drawCalendar(year, mon);
+          stage = 1;
+          setBackground();
+          
         }       
     }
   }
 
-  else if (stage == 1)
+  else if (stage == 1) // menu
   {
-    if (160 < pos[0] && pos[0] < 320)
+    if (100 < pos[1] && pos[1] < 220)
     {
-        if (120 < pos[1] && pos[1] < 240)
+        if (30 < pos[0] && pos[0] < 150)
+        {
+          stage = 2;
+          setBackground();
+          drawCalendar(year, mon);
+        }
+                 
+        else if (180 < pos[0] && pos[0] < 300)
+        {
+          stage = 3;
+          setBackground();
+          draw_button();
+          drawScheduledWash();
+        }
+             
+        else if (330 < pos[0] && pos[0] < 450)
+        {
+          stage = 4;
+          setBackground();
+        }
+          
+    }
+
+    else if (250 < pos[1] && pos[1] < 300)
+    {
+      if (40 < pos[0] && pos[0] < 80)
+        {
           stage = 0;
           setBackground();
           draw_button();
           drawConnect();
+        }
+    }
+        
+          
+  }
 
+  else if (stage == 2)
+  {
+    if (160 < pos[0] && pos[0] < 320)
+    {
+        if (120 < pos[1] && pos[1] < 240)
+        {
+          stage = 1;
+          setBackground();
+        }
+          
     }
 
     if (0 < pos[1] && pos[1] < 50)
     {
         if (400 < pos[0] && pos[0] < 480)
         {
-          setting();  
+          setBackground();
           drawCalendar(year, ++mon);
         }
           
         else if (0 < pos[0] && pos[0] < 80)
         {
-          setting();
+          //stage = 1;
+          setBackground();
           //drawCalendar(year, --mon);
         }
           
         
     }
   }
+
+  else if (stage == 3)
+  {
+  
+    if (100 < pos[1] && pos[1] < 220)
+    {
+        
+        if (30 < pos[0] && pos[0] < 150)
+        {
+          updateScheduledWash(1);
+          drawScheduledWash();
+        }
+         
+        
+        else if (180 < pos[0] && pos[0] < 300)
+        {
+          updateScheduledWash(3);
+          drawScheduledWash();
+        }
+             
+        else if (330 < pos[0] && pos[0] < 450)
+        {
+          updateScheduledWash(6);
+          drawScheduledWash();
+        }
+          
+    }
+    
+    else if (250 < pos[1] && pos[1] < 300)
+    {
+      if (40 < pos[0] && pos[0] < 80)
+        {
+          stage = 1;
+          setBackground();
+        }
+    }
+
+
+
+    
+  }
+  
+  else if (stage == 4)
+  {
+    if (160 < pos[0] && pos[0] < 320)
+    {
+        if (120 < pos[1] && pos[1] < 240)
+        {
+          stage = 1;
+          setBackground();
+        }
+          
+    }
+  }
+  
+}
+
+void drawScheduledWash()
+{
+  tft.fillRect(200, 300, 120, 20, TFT_WHITE);
+  tft.setTextColor(TFT_BLACK);
+  tft.setTextSize(1);
+
+  tft.setCursor(200, 300);
+  tft.println(scheduledDate[0]);
+
+  tft.setCursor(250, 300);
+  tft.println(scheduledDate[1]);
+
+  tft.setCursor(270, 300);
+  tft.println(scheduledDate[2]);
+
+  tft.setCursor(290, 300);
+  tft.println(scheduledDate[3]);
+
+  tft.setCursor(310, 300);
+  tft.println(scheduledDate[4]);
   
 }
 
 
+void updateScheduledWash(int s_mon)
+{
+  if (conn != 1)
+    return;
+    
+  scheduledMonth = s_mon;
+
+  if (mon + scheduledMonth > 12)
+  {
+    scheduledDate[0] = year + 1;
+    scheduledDate[1] = mon + scheduledMonth - 12;
+  }
+
+  else
+  {
+    scheduledDate[1] =  mon + scheduledMonth;
+  }
+
+  
+}
+
 void drawCalendar(int y, int m)
 {
+  if (conn == 0)
+    return;
+    
   if ((year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0)))
     days[1] = 29;
 
@@ -265,11 +419,6 @@ void drawCalendar(int y, int m)
 }
 
 
-void setting()
-{
-  stage = 1;
-  setBackground();
-}
 
 void drawConnect()
 {
@@ -350,7 +499,25 @@ void loop()
     delay(100);
     drawTime(); 
   }
-     
+
+  if (initWashFlag)
+  {
+    initScheduledWashing();
+    updateScheduledWash(3);
+  }
+    
+}
+
+void initScheduledWashing()
+{
+  initWashFlag = false;
+
+  scheduledDate[0] = year;
+  scheduledDate[1] = mon;
+  scheduledDate[2] = day;
+  scheduledDate[3] = 0;
+  scheduledDate[4] = 0;
+  
 }
 
 void dustSensor_init()
@@ -730,23 +897,49 @@ int print_img(fs::FS &fs, String filename, int x, int y)
 void draw_button()
 {
     SPI_ON_TFT;
-
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1.5);
-
-    tft.setCursor(340, 50);
-    tft.println("Air pollution");
-
-    tft.setCursor(340, 120);
-    tft.println("Indoor Dust");
-
-    tft.setCursor(340, 190);
-    tft.println("Pan Motor");
-
-    tft.setCursor(340, 260);
-    tft.println("Setting");
     
+    
+    if (stage == 0)
+    {
+      tft.setTextColor(TFT_WHITE);
+      tft.setTextSize(1.5);
+    
+      tft.setCursor(340, 50);
+      tft.println("Air pollution");
+  
+      tft.setCursor(340, 120);
+      tft.println("Indoor Dust");
+  
+      tft.setCursor(340, 190);
+      tft.println("Pan Motor");
+  
+      tft.setCursor(340, 260);
+      tft.println("Setting");
+    }
+    
+    else if (stage == 3)
+    {
+      tft.setTextColor(TFT_BLACK);
+      tft.setTextSize(3);
+    
+      tft.setCursor(150, 30);
+      tft.println("Schduled Washing");
+      
+      tft.setTextColor(TFT_WHITE);
+      tft.setTextSize(1.5);
+    
+      tft.setCursor(50, 160);
+      tft.println("+ 1 month");
+  
+      tft.setCursor(200, 160);
+      tft.println("+ 3 month");
+  
+      tft.setCursor(350, 160);
+      tft.println("+ 6 month");
+      
+    }
     SPI_OFF_TFT;
+
 }
 
  
