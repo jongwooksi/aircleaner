@@ -4,6 +4,10 @@
 
 Baseline : https://github.com/Makerfabs/Project_Touch-Screen-Camera
 
+20210626
+- 달력에 날짜 클릭시 해당 월/일 인식 기능 추가
+- 달력페이지 뒤로가기 버튼은 상단중앙으로 변경
+
 20210624
 - Setting Menu Background 추가, 해당 페이지에서 달력, Washing 예약, 세부정보 페이지로 이동 가능
 - 달력 넘기다 연도 바뀔 때 오류 수정

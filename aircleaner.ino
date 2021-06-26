@@ -253,19 +253,16 @@ void touchDisplaySet()
   {
     
     
-    if (160 < pos[0] && pos[0] < 320)
+  
+    if (0 < pos[1] && pos[1] < 35)
     {
-        if (120 < pos[1] && pos[1] < 240)
+        if (160 < pos[0] && pos[0] < 320)
         {
           stage = 1;
           setBackground();
         }
-          
-    }
-
-    if (0 < pos[1] && pos[1] < 50)
-    {
-        if (400 < pos[0] && pos[0] < 480)
+        
+        else if (400 < pos[0] && pos[0] < 480)
         {
           setBackground();
           drawCalendar(t_year, t_mon+1, 1);
@@ -278,6 +275,33 @@ void touchDisplaySet()
         }
           
         
+    }
+
+
+    else if (35 < pos[1] && pos[1] < 275)
+    {
+        if (50 < pos[0] && pos[0] < 430)
+        {
+          int col = int((pos[0] - 50)/60);
+          int row = int((pos[1]-100)/35);
+
+          int clickDay = 7*row - startwday + col + 1;
+
+          if ((clickDay >0) && (clickDay <= days[t_mon - 1]))
+          {
+            tft.fillRect(200, 300, 60, 20, TFT_WHITE);
+            tft.setTextColor(TFT_BLACK);
+            tft.setTextSize(2);
+          
+            tft.setCursor(200, 300);
+            tft.println(t_mon);
+          
+            tft.setCursor(230, 300);
+            tft.println(clickDay);
+          
+
+          }
+        }
     }
   }
 
