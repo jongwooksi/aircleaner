@@ -24,6 +24,24 @@
 // ----------------------------------
 #define PWM_CH_NUM		4
 
+
+#include <intrins.h>
+#include "MC96FR332A.h"		  
+
+
+unsigned int _i2c_tx_len, _i2c_tx_count;
+unsigned int _i2c_rx_len, _i2c_rx_count;
+
+bit _i2c_start_capture=0;
+bit _i2c_rx_complete=0;
+bit _i2c_tx_complete=0;
+
+unsigned char _i2c_rx_err=0;
+unsigned char _i2c_tx_err=0;
+unsigned int _i2c_rx_buf[8] = {0};
+
+
+
 typedef struct _tagPWMINFO {
 	int 	period;
 	int 	duty;
@@ -32,7 +50,6 @@ typedef struct _tagPWMINFO {
 	int 	count;
 	int		out;
 } PWMINFO;
-
 
 
 static unsigned int _OP_MODE = 0;
@@ -60,13 +77,7 @@ static int _pwm_mask = 0x0f;	// Enable Mask : - - - - PWM3 PWM2 PWM1 PWM0
 PWMINFO 	_pwm[PWM_CH_NUM];
 
 
-static int _t1loop;
 static char _pwm_out;
-static char _motor_out;
-
-
-// Function Prototypes
-void enterStopMode();
 
 
 
@@ -113,13 +124,13 @@ void port_init()
 	P2   = 0x00;    	// port initial value
 
 	// P3
-	P3IO = 0xFF;    	// direction
-	P3PU = 0x00;    	// pullup
+	P3IO = 0xBF;    	// direction
+	P3PU = 0xFF;    	// pullup
 	P3OD = 0x00;    	// open drain
 	P3BPC = 0x00;   	// BPC
 	P3   = 0x00;    	// port initial value
 
-	PSR0 = 0x0F;    	// port selection
+	PSR0 = 0xC0;    	// port selection
 						// SDASWAP SCLSWAP SS0SWAP XCK0SWAP INT3SWAP INT2SWAP INT1SWAP INT0SWAP
 						// INT3SWAP = 1 : External interrupt 3 is triggered on P15 instead of P22
 						// INT2SWAP = 1 : External interrupt 2 is triggered on P14 instead of P21
@@ -149,7 +160,7 @@ void pwm_setup( PWMINFO *pwm, int period, int duty )
 void pwm_init()
 {
 
-	pwm_setup( &_pwm[0], 10, 6 );
+	pwm_setup( &_pwm[0], 10, 0 );
 	pwm_setup( &_pwm[1], 10, 7 );
 	pwm_setup( &_pwm[2], 10, 8 );
 	pwm_setup( &_pwm[3], 10, 9 );
@@ -212,7 +223,6 @@ void pwm_setup_control( unsigned int pwmflag, unsigned int ctl )
 //======================================================
 void pwm_control()
 {
-	int i;
 
 	// 60, 70, 80, 90, 100
 
@@ -299,6 +309,125 @@ void setupOpMode()
 }
 
 
+
+void I2C_Init(void)
+{
+
+	_i2c_tx_count = 0;
+	_i2c_rx_count = 0;
+
+
+	//IE2 |= 0x20;	// Enable I2C interrupt Enable	// - - INT17E(I2C) INT16E(T3) INT15E(T2) INT14E(T1) INT13E(T0) INT12E(UART-RX1)
+	//;
+	IP	= 0x20;	//I2C(GROUP5) 
+	IP1	= 0x20;	//I2C(GROUP5) 
+
+	I2CMR = 0x20; // I2C RESET	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x00; // I2C clear	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x20; // I2C RESET	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x40; // I2C enable	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x50;//IICEN, I2C interrupt enable, SLAVE default mode	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+
+
+ 	// SCL Low Period  = tsclk * (4 * SCLLR + 1)
+	// SCL High Period = tsclk * (4 * SCLHR + 3)
+	// fI2C = 1/ { tsclk * (4 * (SCLLR + SCLHR) + 4) }
+	//
+	// fI2C = 200 kHz in (SCLLR + SCLHR) = 4 at 4MHz(tsclk = 0.25 us)
+	I2CSCLLR = 2;
+	I2CSCLHR = 2; // 
+	I2CSDAHR = 2; // SDA hold time 
+	//
+	//= 0xFF;	  //GCALL TEND STOP SSEL MLOST BUSY TMODE RXACK
+
+	//I2CSAR = SELF_ADDRESS; // self address is 0xA0
+	I2CMR = 0x40 | 0x10 | 0x08;	//IICEN+INTEN+ACKEN; //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+}
+
+
+
+ void I2C_Clear(void)
+{
+	int i;
+
+	for(i = 0; i < 8; i++) {
+		_i2c_rx_buf[i] = 0;
+	}
+
+	_i2c_rx_count = 0;
+	_i2c_rx_err = 0;
+}
+
+
+
+void setPWM()
+{
+	if (_i2c_rx_buf == 0x00 )
+		pwm_enable(0, -1, -1, -1);
+	
+	else if (_i2c_rx_buf == 0x01 )
+		pwm_setup( &_pwm[0], 10, 6 );
+	
+	else if (_i2c_rx_buf == 0x02 )
+		pwm_setup( &_pwm[0], 10, 7 );
+	
+	else if (_i2c_rx_buf == 0x04 )
+		pwm_setup( &_pwm[0], 10, 8 );
+	
+	else if (_i2c_rx_buf == 0x08 )
+		pwm_setup( &_pwm[0], 10, 9 );
+	
+	else if (_i2c_rx_buf == 0x10 )
+		pwm_setup( &_pwm[0], 10, 10 );
+	
+	I2C_Clear();
+}
+
+
+void I2C_do_slave(void)
+{
+	unsigned char I2C_Data;
+
+	if(I2CSR & 0x01) // RXACK OK?	 //GCALL TEND STOP SSEL MLOST BUSY TMODE RXACK
+	{ 
+		if(_i2c_rx_count < _i2c_rx_len)
+		{ 
+			I2C_Data = I2CDR;
+			_i2c_rx_buf[ _i2c_rx_count ] = I2C_Data;
+
+			_i2c_rx_count++;
+
+			if(_i2c_rx_count >= _i2c_rx_len) 
+			{
+				_i2c_rx_complete = 1;
+				_i2c_rx_err = 0;
+				_i2c_start_capture = 0;
+				setPWM();
+			}
+
+		}
+		else  
+		{
+			_i2c_rx_complete = 1;
+			_i2c_rx_err = 1;
+			_i2c_start_capture = 0;
+			I2CMR |= 0x02; // STOP generation 	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+		}
+
+	}
+	else  // RXACK fail?
+	{
+		_i2c_rx_complete = 1;
+		_i2c_rx_err = 2;
+		_i2c_start_capture = 0;
+
+		I2CMR |= 0x02; // STOP generation 	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	}
+
+}
+
+
+
 //======================================================
 // main
 //======================================================
@@ -312,6 +441,10 @@ void main()
 	pwm_enable( 1, 1, 1, 1 );	
 	pwm_init();
 	timer_init();
+	
+	I2C_Init();
+	I2C_Clear();
+
 	sei();          	// enable INT.
 
 
@@ -319,9 +452,8 @@ void main()
 	setupOpMode();
 
 	while(1) {
-				
+		I2C_do_slave();
 		pwm_control();
-
 
 	}
 }

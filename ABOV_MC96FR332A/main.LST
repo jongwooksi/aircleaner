@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              07/23/2021 20:43:24 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -33,330 +33,466 @@ line level    source
   24          // ----------------------------------
   25          #define PWM_CH_NUM    4
   26          
-  27          typedef struct _tagPWMINFO {
-  28            int   period;
-  29            int   duty;
-  30            int   default_duty;
-  31            int   next_duty;
-  32            int   count;
-  33            int   out;
-  34          } PWMINFO;
-  35          
-  36          
-  37          
-  38          static unsigned int _OP_MODE = 0;
-  39          static unsigned int _OP_MODE_ON_CHANGE = 0;
-  40          static unsigned int _ENABLE_COLOR_LOOP = 0;
-  41          static unsigned int _COLOR_LOOP_INDEX = 0;
+  27          
+  28          #include <intrins.h>
+  29          #include "MC96FR332A.h"     
+  30          
+  31          
+  32          unsigned int _i2c_tx_len, _i2c_tx_count;
+  33          unsigned int _i2c_rx_len, _i2c_rx_count;
+  34          
+  35          bit _i2c_start_capture=0;
+  36          bit _i2c_rx_complete=0;
+  37          bit _i2c_tx_complete=0;
+  38          
+  39          unsigned char _i2c_rx_err=0;
+  40          unsigned char _i2c_tx_err=0;
+  41          unsigned int _i2c_rx_buf[8] = {0};
   42          
-  43          static unsigned int _btn0_pressed = 0;
-  44          static unsigned int _btn1_pressed = 0;
-  45          static unsigned int _btn0_elapse_cnt = 0;
-  46          static unsigned int _btn1_elapse_cnt = 0;
-  47          
-  48          static unsigned int _pwm_ctl_dec_flag = 0;
-  49          static unsigned int _pwm_ctl_inc_flag = 0;
-  50          static unsigned int _pwm_ctl_cnt = 0;
-  51          
-  52          static unsigned int _pwm_flag_list[PWM_CH_NUM] = { PWM0_FLAG, PWM1_FLAG, PWM2_FLAG, PWM3_FLAG };
+  43          
+  44          
+  45          typedef struct _tagPWMINFO {
+  46            int   period;
+  47            int   duty;
+  48            int   default_duty;
+  49            int   next_duty;
+  50            int   count;
+  51            int   out;
+  52          } PWMINFO;
   53          
-  54          static unsigned int _colorDelayCount = 0;
-  55          
-C51 COMPILER V9.60.0.0   MAIN                                                              07/23/2021 20:43:24 PAGE 2   
+  54          
+  55          static unsigned int _OP_MODE = 0;
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 2   
 
-  56          static unsigned int _global_ctl_flag = 0;
-  57          
-  58          // ----------------------------------
-  59          static int _pwm_mask = 0x0f;  // Enable Mask : - - - - PWM3 PWM2 PWM1 PWM0
-  60          PWMINFO   _pwm[PWM_CH_NUM];
-  61          
-  62          
-  63          static int _t1loop;
-  64          static char _pwm_out;
-  65          static char _motor_out;
-  66          
-  67          
-  68          // Function Prototypes
-  69          void enterStopMode();
+  56          static unsigned int _OP_MODE_ON_CHANGE = 0;
+  57          static unsigned int _ENABLE_COLOR_LOOP = 0;
+  58          static unsigned int _COLOR_LOOP_INDEX = 0;
+  59          
+  60          static unsigned int _btn0_pressed = 0;
+  61          static unsigned int _btn1_pressed = 0;
+  62          static unsigned int _btn0_elapse_cnt = 0;
+  63          static unsigned int _btn1_elapse_cnt = 0;
+  64          
+  65          static unsigned int _pwm_ctl_dec_flag = 0;
+  66          static unsigned int _pwm_ctl_inc_flag = 0;
+  67          static unsigned int _pwm_ctl_cnt = 0;
+  68          
+  69          static unsigned int _pwm_flag_list[PWM_CH_NUM] = { PWM0_FLAG, PWM1_FLAG, PWM2_FLAG, PWM3_FLAG };
   70          
-  71          
+  71          static unsigned int _colorDelayCount = 0;
   72          
-  73          //======================================================
-  74          // peripheral setting routines
-  75          //======================================================
-  76          
-  77          void BOD_init()
-  78          {
-  79   1        // initialize BOD (Brown out detector)
-  80   1        // BODR bit2~1 = BODout selection
-  81   1        // - default is 00 (BODout1)
-  82   1        BODR = 0x01;      // setting
-  83   1      }
-  84          
-  85          void clock_init()
-  86          {
-  87   1        // Nothing to do for the default clock
-  88   1        //SCCR |= 0x10;   // set CBYS
-  89   1      }
-  90          
-  91          
-  92          // initialize ports
-  93          void port_init()
-  94          {
-  95   1        // P0
-  96   1        P0IO = 0xFF;      // direction
-  97   1        P0PU = 0xFF;      // pullup
-  98   1        P0BPC = 0xFF;     // BPC
-  99   1        P0   = 0x00;      // port initial value
- 100   1      
- 101   1        // P1
- 102   1        P1IO = 0xFF;      // direction
- 103   1        P1PU = 0x00;      // pullup
- 104   1        P1OD = 0x00;      // open drain
- 105   1        P1BPC = 0x00;     // BPC
- 106   1        P1   = 0x00;      // port initial value
- 107   1      
- 108   1        // P2
- 109   1        P2IO = 0xFF;      // direction
- 110   1        P2PU = 0x00;      // pullup
- 111   1        P2OD = 0x00;      // open drain
- 112   1        P2BPC = 0x00;     // BPC
- 113   1        P2   = 0x00;      // port initial value
- 114   1      
- 115   1        // P3
- 116   1        P3IO = 0xFF;      // direction
- 117   1        P3PU = 0x00;      // pullup
-C51 COMPILER V9.60.0.0   MAIN                                                              07/23/2021 20:43:24 PAGE 3   
+  73          static unsigned int _global_ctl_flag = 0;
+  74          
+  75          // ----------------------------------
+  76          static int _pwm_mask = 0x0f;  // Enable Mask : - - - - PWM3 PWM2 PWM1 PWM0
+  77          PWMINFO   _pwm[PWM_CH_NUM];
+  78          
+  79          
+  80          static char _pwm_out;
+  81          
+  82          
+  83          
+  84          //======================================================
+  85          // peripheral setting routines
+  86          //======================================================
+  87          
+  88          void BOD_init()
+  89          {
+  90   1        // initialize BOD (Brown out detector)
+  91   1        // BODR bit2~1 = BODout selection
+  92   1        // - default is 00 (BODout1)
+  93   1        BODR = 0x01;      // setting
+  94   1      }
+  95          
+  96          void clock_init()
+  97          {
+  98   1        // Nothing to do for the default clock
+  99   1        //SCCR |= 0x10;   // set CBYS
+ 100   1      }
+ 101          
+ 102          
+ 103          // initialize ports
+ 104          void port_init()
+ 105          {
+ 106   1        // P0
+ 107   1        P0IO = 0xFF;      // direction
+ 108   1        P0PU = 0xFF;      // pullup
+ 109   1        P0BPC = 0xFF;     // BPC
+ 110   1        P0   = 0x00;      // port initial value
+ 111   1      
+ 112   1        // P1
+ 113   1        P1IO = 0xFF;      // direction
+ 114   1        P1PU = 0x00;      // pullup
+ 115   1        P1OD = 0x00;      // open drain
+ 116   1        P1BPC = 0x00;     // BPC
+ 117   1        P1   = 0x00;      // port initial value
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 3   
 
- 118   1        P3OD = 0x00;      // open drain
- 119   1        P3BPC = 0x00;     // BPC
- 120   1        P3   = 0x00;      // port initial value
- 121   1      
- 122   1        PSR0 = 0x0F;      // port selection
- 123   1                  // SDASWAP SCLSWAP SS0SWAP XCK0SWAP INT3SWAP INT2SWAP INT1SWAP INT0SWAP
- 124   1                  // INT3SWAP = 1 : External interrupt 3 is triggered on P15 instead of P22
- 125   1                  // INT2SWAP = 1 : External interrupt 2 is triggered on P14 instead of P21
- 126   1                  // INT1SWAP = 1 : External interrupt 1 is triggered on P13 instead of P37
- 127   1                  // INT0SWAP = 1 : External interrupt 0 is triggered on P12 instead of P36
- 128   1      }
- 129          
- 130          
- 131          
- 132          
- 133          //======================================================
- 134          // PWM
- 135          //======================================================
- 136          
- 137          // period, duty unit : T1 interrupt interval
- 138          void pwm_setup( PWMINFO *pwm, int period, int duty )
- 139          {
- 140   1        pwm->period     = period;
- 141   1        pwm->duty       = duty;
- 142   1        pwm->next_duty    = duty;
- 143   1        pwm->default_duty = duty;
- 144   1        pwm->count    = 0;
- 145   1        pwm->out    = 0;
- 146   1      }
+ 118   1      
+ 119   1        // P2
+ 120   1        P2IO = 0xFF;      // direction
+ 121   1        P2PU = 0x00;      // pullup
+ 122   1        P2OD = 0x00;      // open drain
+ 123   1        P2BPC = 0x00;     // BPC
+ 124   1        P2   = 0x00;      // port initial value
+ 125   1      
+ 126   1        // P3
+ 127   1        P3IO = 0xBF;      // direction
+ 128   1        P3PU = 0xFF;      // pullup
+ 129   1        P3OD = 0x00;      // open drain
+ 130   1        P3BPC = 0x00;     // BPC
+ 131   1        P3   = 0x00;      // port initial value
+ 132   1      
+ 133   1        PSR0 = 0xC0;      // port selection
+ 134   1                  // SDASWAP SCLSWAP SS0SWAP XCK0SWAP INT3SWAP INT2SWAP INT1SWAP INT0SWAP
+ 135   1                  // INT3SWAP = 1 : External interrupt 3 is triggered on P15 instead of P22
+ 136   1                  // INT2SWAP = 1 : External interrupt 2 is triggered on P14 instead of P21
+ 137   1                  // INT1SWAP = 1 : External interrupt 1 is triggered on P13 instead of P37
+ 138   1                  // INT0SWAP = 1 : External interrupt 0 is triggered on P12 instead of P36
+ 139   1      }
+ 140          
+ 141          
+ 142          
+ 143          
+ 144          //======================================================
+ 145          // PWM
+ 146          //======================================================
  147          
- 148          
- 149          void pwm_init()
+ 148          // period, duty unit : T1 interrupt interval
+ 149          void pwm_setup( PWMINFO *pwm, int period, int duty )
  150          {
- 151   1      
- 152   1        pwm_setup( &_pwm[0], 10, 6 );
- 153   1        pwm_setup( &_pwm[1], 10, 7 );
- 154   1        pwm_setup( &_pwm[2], 10, 8 );
- 155   1        pwm_setup( &_pwm[3], 10, 9 );
- 156   1      
- 157   1      
- 158   1      }
+ 151   1        pwm->period     = period;
+ 152   1        pwm->duty       = duty;
+ 153   1        pwm->next_duty    = duty;
+ 154   1        pwm->default_duty = duty;
+ 155   1        pwm->count    = 0;
+ 156   1        pwm->out    = 0;
+ 157   1      }
+ 158          
  159          
- 160          //======================================================
- 161          // Timer
- 162          //======================================================
- 163          void timer_init()
- 164          {
- 165   1        //cli();
- 166   1      
- 167   1        // Enable T0 Timer
- 168   1        IE2   |= 0x02;
- 169   1      
- 170   1        T0CR  = 0x97; // T0EN T0_PE CAP0 T0CK2 T0CK1 T0CK0 T0CN T0ST
- 171   1                //   1    0     0    1    0       1    1    1   (0x97)
- 172   1                //    T0EN : Enable or disable Timer0
- 173   1                //    T0_PE : T0 pin out enable
- 174   1                //    CAP0 : Timer0 capture mode (0=Timer mode, 1=Capture mode)
- 175   1                //    T0CK[2:0] : clock source
- 176   1                //      (base Fsclk : 7.3728 MHz)
- 177   1                //      000 : Fsclk / 2   : 3.6864 MHz : 0.2712 us
- 178   1                //      001 : Fsclk / 4   : 1.8432 MHz : 0.5415 us
- 179   1                //      010 : Fsclk / 16  : 0.4608 MHz : 2.17   us
-C51 COMPILER V9.60.0.0   MAIN                                                              07/23/2021 20:43:24 PAGE 4   
+ 160          void pwm_init()
+ 161          {
+ 162   1      
+ 163   1        pwm_setup( &_pwm[0], 10, 0 );
+ 164   1        pwm_setup( &_pwm[1], 10, 7 );
+ 165   1        pwm_setup( &_pwm[2], 10, 8 );
+ 166   1        pwm_setup( &_pwm[3], 10, 9 );
+ 167   1      
+ 168   1      }
+ 169          
+ 170          //======================================================
+ 171          // Timer
+ 172          //======================================================
+ 173          void timer_init()
+ 174          {
+ 175   1        //cli();
+ 176   1      
+ 177   1        // Enable T0 Timer
+ 178   1        IE2   |= 0x02;
+ 179   1      
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 4   
 
- 180   1                //      ...
- 181   1                //      101 : Fsclk / 1024  : 7,200  Hz  : 0.1388 ms (1000/0.13888 = 720)
- 182   1                //      110 : Fsclk / 4096  : 1,800  Hz  : 0.5555 ms
- 183   1                //    T0CN : pause or continue counting (0=Pause 1=Continue)
- 184   1                //    T0ST : start or stop (0=Stop 1=Clear and start)
- 185   1      
- 186   1        T0DR  = 72; 
- 187   1      
- 188   1        //sei();
- 189   1      }
- 190          
- 191          
- 192          //======================================================
- 193          void pwm_setup_control( unsigned int pwmflag, unsigned int ctl )
- 194          {
- 195   1        if( ctl == PWM_CTL_OFF ) 
- 196   1        {
- 197   2          _pwm_ctl_inc_flag &= ~pwmflag;
- 198   2          _pwm_ctl_dec_flag &= ~pwmflag;
- 199   2        }
- 200   1        else if( ctl == PWM_CTL_DEC ) 
- 201   1        {
- 202   2          _pwm_ctl_dec_flag |=  pwmflag;
- 203   2          _pwm_ctl_inc_flag &= ~pwmflag;
- 204   2        }
- 205   1        else 
+ 180   1        T0CR  = 0x97; // T0EN T0_PE CAP0 T0CK2 T0CK1 T0CK0 T0CN T0ST
+ 181   1                //   1    0     0    1    0       1    1    1   (0x97)
+ 182   1                //    T0EN : Enable or disable Timer0
+ 183   1                //    T0_PE : T0 pin out enable
+ 184   1                //    CAP0 : Timer0 capture mode (0=Timer mode, 1=Capture mode)
+ 185   1                //    T0CK[2:0] : clock source
+ 186   1                //      (base Fsclk : 7.3728 MHz)
+ 187   1                //      000 : Fsclk / 2   : 3.6864 MHz : 0.2712 us
+ 188   1                //      001 : Fsclk / 4   : 1.8432 MHz : 0.5415 us
+ 189   1                //      010 : Fsclk / 16  : 0.4608 MHz : 2.17   us
+ 190   1                //      ...
+ 191   1                //      101 : Fsclk / 1024  : 7,200  Hz  : 0.1388 ms (1000/0.13888 = 720)
+ 192   1                //      110 : Fsclk / 4096  : 1,800  Hz  : 0.5555 ms
+ 193   1                //    T0CN : pause or continue counting (0=Pause 1=Continue)
+ 194   1                //    T0ST : start or stop (0=Stop 1=Clear and start)
+ 195   1      
+ 196   1        T0DR  = 72; 
+ 197   1      
+ 198   1        //sei();
+ 199   1      }
+ 200          
+ 201          
+ 202          //======================================================
+ 203          void pwm_setup_control( unsigned int pwmflag, unsigned int ctl )
+ 204          {
+ 205   1        if( ctl == PWM_CTL_OFF ) 
  206   1        {
- 207   2          _pwm_ctl_dec_flag &= ~pwmflag;
- 208   2          _pwm_ctl_inc_flag |=  pwmflag;
+ 207   2          _pwm_ctl_inc_flag &= ~pwmflag;
+ 208   2          _pwm_ctl_dec_flag &= ~pwmflag;
  209   2        }
- 210   1      }
- 211          
- 212          
- 213          //======================================================
- 214          void pwm_control()
- 215          {
- 216   1        int i;
- 217   1      
- 218   1        // 60, 70, 80, 90, 100
- 219   1      
- 220   1        _pwm_out = 0;
- 221   1      
- 222   1        // PWM 0
- 223   1        if( _pwm[0].count < _pwm[0].duty && (_pwm_mask & PWM0_FLAG) ) {
- 224   2          _pwm_out |= 0x01; // P00
- 225   2        }
+ 210   1        else if( ctl == PWM_CTL_DEC ) 
+ 211   1        {
+ 212   2          _pwm_ctl_dec_flag |=  pwmflag;
+ 213   2          _pwm_ctl_inc_flag &= ~pwmflag;
+ 214   2        }
+ 215   1        else 
+ 216   1        {
+ 217   2          _pwm_ctl_dec_flag &= ~pwmflag;
+ 218   2          _pwm_ctl_inc_flag |=  pwmflag;
+ 219   2        }
+ 220   1      }
+ 221          
+ 222          
+ 223          //======================================================
+ 224          void pwm_control()
+ 225          {
  226   1      
- 227   1        _pwm[0].count++;
+ 227   1        // 60, 70, 80, 90, 100
  228   1      
- 229   1        
- 230   1        if( _pwm[0].count >= _pwm[0].period ) {
- 231   2          _pwm[0].count = 0;
- 232   2          _pwm[0].duty  = _pwm[0].next_duty;
- 233   2        }
- 234   1      
+ 229   1        _pwm_out = 0;
+ 230   1      
+ 231   1        // PWM 0
+ 232   1        if( _pwm[0].count < _pwm[0].duty && (_pwm_mask & PWM0_FLAG) ) {
+ 233   2          _pwm_out |= 0x01; // P00
+ 234   2        }
  235   1      
- 236   1        // PWM 1
- 237   1        if( _pwm[1].count < _pwm[1].duty && (_pwm_mask & PWM1_FLAG) ) {
- 238   2          _pwm_out |= 0x02; // P01
- 239   2        }
- 240   1      
- 241   1        _pwm[1].count++;
-C51 COMPILER V9.60.0.0   MAIN                                                              07/23/2021 20:43:24 PAGE 5   
+ 236   1        _pwm[0].count++;
+ 237   1      
+ 238   1        
+ 239   1        if( _pwm[0].count >= _pwm[0].period ) {
+ 240   2          _pwm[0].count = 0;
+ 241   2          _pwm[0].duty  = _pwm[0].next_duty;
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 5   
 
- 242   1      
- 243   1        if( _pwm[1].count >= _pwm[1].period ) {
- 244   2          _pwm[1].count = 0;
- 245   2          _pwm[1].duty  = _pwm[1].next_duty;
- 246   2        }
- 247   1      
- 248   1      
- 249   1        // PWM 2
- 250   1        if( _pwm[2].count < _pwm[2].duty && (_pwm_mask & PWM2_FLAG) ) {
- 251   2          _pwm_out |= 0x04; // P02
- 252   2        }
- 253   1      
- 254   1        _pwm[2].count++;
- 255   1      
- 256   1        if( _pwm[2].count >= _pwm[2].period ) {
- 257   2          _pwm[2].count = 0;
- 258   2          _pwm[2].duty  = _pwm[2].next_duty;
- 259   2        }
- 260   1      
- 261   1      
- 262   1        // PWM 3
- 263   1        if( _pwm[3].count < _pwm[3].duty && (_pwm_mask & PWM3_FLAG) ) {
- 264   2          _pwm_out |= 0x08; // P03
- 265   2        }
- 266   1      
- 267   1        _pwm[3].count++;
- 268   1      
- 269   1        
- 270   1        if( _pwm[3].count >= _pwm[3].period ) {
- 271   2          _pwm[3].count = 0;
- 272   2          _pwm[3].duty  = _pwm[3].next_duty;
- 273   2        }
- 274   1      
+ 242   2        }
+ 243   1      
+ 244   1      
+ 245   1        // PWM 1
+ 246   1        if( _pwm[1].count < _pwm[1].duty && (_pwm_mask & PWM1_FLAG) ) {
+ 247   2          _pwm_out |= 0x02; // P01
+ 248   2        }
+ 249   1      
+ 250   1        _pwm[1].count++;
+ 251   1      
+ 252   1        if( _pwm[1].count >= _pwm[1].period ) {
+ 253   2          _pwm[1].count = 0;
+ 254   2          _pwm[1].duty  = _pwm[1].next_duty;
+ 255   2        }
+ 256   1      
+ 257   1      
+ 258   1        // PWM 2
+ 259   1        if( _pwm[2].count < _pwm[2].duty && (_pwm_mask & PWM2_FLAG) ) {
+ 260   2          _pwm_out |= 0x04; // P02
+ 261   2        }
+ 262   1      
+ 263   1        _pwm[2].count++;
+ 264   1      
+ 265   1        if( _pwm[2].count >= _pwm[2].period ) {
+ 266   2          _pwm[2].count = 0;
+ 267   2          _pwm[2].duty  = _pwm[2].next_duty;
+ 268   2        }
+ 269   1      
+ 270   1      
+ 271   1        // PWM 3
+ 272   1        if( _pwm[3].count < _pwm[3].duty && (_pwm_mask & PWM3_FLAG) ) {
+ 273   2          _pwm_out |= 0x08; // P03
+ 274   2        }
  275   1      
- 276   1        P0 = _pwm_out;
+ 276   1        _pwm[3].count++;
  277   1      
- 278   1      
- 279   1      }
-*** WARNING C280 IN LINE 216 OF main.c: 'i': unreferenced local variable
- 280          
- 281          void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
- 282          {
- 283   1        // 0:Disable 1:Enable -1:Don't care(not change)
+ 278   1        
+ 279   1        if( _pwm[3].count >= _pwm[3].period ) {
+ 280   2          _pwm[3].count = 0;
+ 281   2          _pwm[3].duty  = _pwm[3].next_duty;
+ 282   2        }
+ 283   1      
  284   1      
- 285   1        // B/G/R/Motor
- 286   1        if( pwm0 != -1 ) { if( pwm0 ) _pwm_mask |= PWM0_FLAG; else _pwm_mask &= ~PWM0_FLAG; }
- 287   1        if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
- 288   1        if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
- 289   1        if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
- 290   1      }
- 291          
- 292          //======================================================
- 293          void setupOpMode()
- 294          {
- 295   1        pwm_setup_control( PWM0_FLAG, PWM_CTL_OFF );
- 296   1        pwm_setup_control( PWM1_FLAG, PWM_CTL_OFF );
- 297   1        pwm_setup_control( PWM2_FLAG, PWM_CTL_OFF );
- 298   1        pwm_setup_control( PWM3_FLAG, PWM_CTL_OFF );
- 299   1      
- 300   1      }
- 301          
- 302          
-C51 COMPILER V9.60.0.0   MAIN                                                              07/23/2021 20:43:24 PAGE 6   
+ 285   1        P0 = _pwm_out;
+ 286   1      
+ 287   1      
+ 288   1      }
+ 289          
+ 290          void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
+ 291          {
+ 292   1        // 0:Disable 1:Enable -1:Don't care(not change)
+ 293   1      
+ 294   1        // B/G/R/Motor
+ 295   1        if( pwm0 != -1 ) { if( pwm0 ) _pwm_mask |= PWM0_FLAG; else _pwm_mask &= ~PWM0_FLAG; }
+ 296   1        if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
+ 297   1        if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
+ 298   1        if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
+ 299   1      }
+ 300          
+ 301          //======================================================
+ 302          void setupOpMode()
+ 303          {
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 6   
 
- 303          //======================================================
- 304          // main
- 305          //======================================================
- 306          void main()
- 307          {
- 308   1        int i;
- 309   1      
- 310   1        cli();            // disable INT. during peripheral setting
- 311   1        port_init();      // initialize ports
- 312   1        clock_init();     // initialize operation clock
- 313   1        pwm_enable( 1, 1, 1, 1 ); 
- 314   1        pwm_init();
- 315   1        timer_init();
- 316   1        sei();            // enable INT.
- 317   1      
+ 304   1        pwm_setup_control( PWM0_FLAG, PWM_CTL_OFF );
+ 305   1        pwm_setup_control( PWM1_FLAG, PWM_CTL_OFF );
+ 306   1        pwm_setup_control( PWM2_FLAG, PWM_CTL_OFF );
+ 307   1        pwm_setup_control( PWM3_FLAG, PWM_CTL_OFF );
+ 308   1      
+ 309   1      }
+ 310          
+ 311          
+ 312          
+ 313          void I2C_Init(void)
+ 314          {
+ 315   1      
+ 316   1        _i2c_tx_count = 0;
+ 317   1        _i2c_rx_count = 0;
  318   1      
- 319   1        for(i = 0; i < 1000; i++) _nop_();  // init delay
- 320   1        setupOpMode();
- 321   1      
- 322   1        while(1) {
- 323   2              
- 324   2          pwm_control();
- 325   2      
- 326   2      
- 327   2        }
- 328   1      }
+ 319   1      
+ 320   1        //IE2 |= 0x20;  // Enable I2C interrupt Enable  // - - INT17E(I2C) INT16E(T3) INT15E(T2) INT14E(T1) INT13E(
+             -T0) INT12E(UART-RX1)
+ 321   1        //;
+ 322   1        IP  = 0x20; //I2C(GROUP5) 
+ 323   1        IP1 = 0x20; //I2C(GROUP5) 
+ 324   1      
+ 325   1        I2CMR = 0x20; // I2C RESET  //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 326   1        I2CMR = 0x00; // I2C clear  //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 327   1        I2CMR = 0x20; // I2C RESET  //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 328   1        I2CMR = 0x40; // I2C enable //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 329   1        I2CMR = 0x50;//IICEN, I2C interrupt enable, SLAVE default mode  //IIF IICEN RESET INTEN ACKEN MASTER STOP 
+             -START
+ 330   1      
+ 331   1      
+ 332   1        // SCL Low Period  = tsclk * (4 * SCLLR + 1)
+ 333   1        // SCL High Period = tsclk * (4 * SCLHR + 3)
+ 334   1        // fI2C = 1/ { tsclk * (4 * (SCLLR + SCLHR) + 4) }
+ 335   1        //
+ 336   1        // fI2C = 200 kHz in (SCLLR + SCLHR) = 4 at 4MHz(tsclk = 0.25 us)
+ 337   1        I2CSCLLR = 2;
+ 338   1        I2CSCLHR = 2; // 
+ 339   1        I2CSDAHR = 2; // SDA hold time 
+ 340   1        //
+ 341   1        //= 0xFF;   //GCALL TEND STOP SSEL MLOST BUSY TMODE RXACK
+ 342   1      
+ 343   1        //I2CSAR = SELF_ADDRESS; // self address is 0xA0
+ 344   1        I2CMR = 0x40 | 0x10 | 0x08; //IICEN+INTEN+ACKEN; //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 345   1      }
+ 346          
+ 347          
+ 348          
+ 349           void I2C_Clear(void)
+ 350          {
+ 351   1        int i;
+ 352   1      
+ 353   1        for(i = 0; i < 8; i++) {
+ 354   2          _i2c_rx_buf[i] = 0;
+ 355   2        }
+ 356   1      
+ 357   1        _i2c_rx_count = 0;
+ 358   1        _i2c_rx_err = 0;
+ 359   1      }
+ 360          
+ 361          
+ 362          
+ 363          void setPWM()
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 7   
+
+ 364          {
+ 365   1        if (_i2c_rx_buf == 0x00 )
+ 366   1          pwm_enable(0, -1, -1, -1);
+ 367   1        
+ 368   1        else if (_i2c_rx_buf == 0x01 )
+ 369   1          pwm_setup( &_pwm[0], 10, 6 );
+ 370   1        
+ 371   1        else if (_i2c_rx_buf == 0x02 )
+ 372   1          pwm_setup( &_pwm[0], 10, 7 );
+ 373   1        
+ 374   1        else if (_i2c_rx_buf == 0x04 )
+ 375   1          pwm_setup( &_pwm[0], 10, 8 );
+ 376   1        
+ 377   1        else if (_i2c_rx_buf == 0x08 )
+ 378   1          pwm_setup( &_pwm[0], 10, 9 );
+ 379   1        
+ 380   1        else if (_i2c_rx_buf == 0x10 )
+ 381   1          pwm_setup( &_pwm[0], 10, 10 );
+ 382   1        
+ 383   1        I2C_Clear();
+ 384   1      }
+ 385          
+ 386          
+ 387          void I2C_do_slave(void)
+ 388          {
+ 389   1        unsigned char I2C_Data;
+ 390   1      
+ 391   1        if(I2CSR & 0x01) // RXACK OK?  //GCALL TEND STOP SSEL MLOST BUSY TMODE RXACK
+ 392   1        { 
+ 393   2          if(_i2c_rx_count < _i2c_rx_len)
+ 394   2          { 
+ 395   3            I2C_Data = I2CDR;
+ 396   3            _i2c_rx_buf[ _i2c_rx_count ] = I2C_Data;
+ 397   3      
+ 398   3            _i2c_rx_count++;
+ 399   3      
+ 400   3            if(_i2c_rx_count >= _i2c_rx_len) 
+ 401   3            {
+ 402   4              _i2c_rx_complete = 1;
+ 403   4              _i2c_rx_err = 0;
+ 404   4              _i2c_start_capture = 0;
+ 405   4              setPWM();
+ 406   4            }
+ 407   3      
+ 408   3          }
+ 409   2          else  
+ 410   2          {
+ 411   3            _i2c_rx_complete = 1;
+ 412   3            _i2c_rx_err = 1;
+ 413   3            _i2c_start_capture = 0;
+ 414   3            I2CMR |= 0x02; // STOP generation   //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 415   3          }
+ 416   2      
+ 417   2        }
+ 418   1        else  // RXACK fail?
+ 419   1        {
+ 420   2          _i2c_rx_complete = 1;
+ 421   2          _i2c_rx_err = 2;
+ 422   2          _i2c_start_capture = 0;
+ 423   2      
+ 424   2          I2CMR |= 0x02; // STOP generation   //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+ 425   2        }
+C51 COMPILER V9.60.0.0   MAIN                                                              07/24/2021 19:57:39 PAGE 8   
+
+ 426   1      
+ 427   1      }
+ 428          
+ 429          
+ 430          
+ 431          //======================================================
+ 432          // main
+ 433          //======================================================
+ 434          void main()
+ 435          {
+ 436   1        int i;
+ 437   1      
+ 438   1        cli();            // disable INT. during peripheral setting
+ 439   1        port_init();      // initialize ports
+ 440   1        clock_init();     // initialize operation clock
+ 441   1        pwm_enable( 1, 1, 1, 1 ); 
+ 442   1        pwm_init();
+ 443   1        timer_init();
+ 444   1        
+ 445   1        I2C_Init();
+ 446   1        I2C_Clear();
+ 447   1      
+ 448   1        sei();            // enable INT.
+ 449   1      
+ 450   1      
+ 451   1        for(i = 0; i < 1000; i++) _nop_();  // init delay
+ 452   1        setupOpMode();
+ 453   1      
+ 454   1        while(1) {
+ 455   2          I2C_do_slave();
+ 456   2          pwm_control();
+ 457   2      
+ 458   2        }
+ 459   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    937    ----
+   CODE SIZE        =   1314    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     88      19
+   XDATA SIZE       =    111      17
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   BIT SIZE         =      3    ----
 END OF MODULE INFORMATION.
 
 
-C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

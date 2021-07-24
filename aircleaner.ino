@@ -46,6 +46,7 @@ WiFiClient client;
 #define DUST_OFF_TX digitalWrite(DUST_RX, LOW)
 
 
+
 struct LGFX_Config
 {
     static constexpr spi_host_device_t spi_host = ESP32_TSC_9488_LCD_SPI_HOST;
@@ -107,7 +108,7 @@ void setup()
     esp32_init();
     wifi_init();
     dustSensor_init();
-    
+  
 }
 
 void loop()
@@ -589,7 +590,7 @@ void drawTime()
   tft.drawString(date[4]+":", 110, 300);
   tft.drawString(date[5], 130, 300);
 
-  Serial.println(ctime(&now));
+  //Serial.println(ctime(&now));
   
 }
 
@@ -680,6 +681,37 @@ void checkDust()
         break;
       }    
     }
+}
+
+
+void checkAbovPWM()
+{
+  
+  if (volume == 0)
+    Wire.write(0x00);
+
+  else if (volume == 1)
+    Wire.write(0x01);
+
+  else if (volume == 2)
+    Wire.write(0x02);
+
+  else if (volume == 3)
+    Wire.write(0x04);
+  
+  else if (volume == 4)
+    Wire.write(0x08);
+
+  else if (volume == 5)
+    Wire.write(0x10);
+
+
+  Serial.println(Wire.endTransmission());
+
+
+  delay(100);
+
+   
 }
 
 
@@ -1052,6 +1084,7 @@ void show_log(int cmd_type)
           tft.setCursor(180, 210);      
           tft.println(volume);
           
+          checkAbovPWM();
           
           break;
 
