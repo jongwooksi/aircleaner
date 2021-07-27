@@ -59,6 +59,14 @@ PWMINFO 	_pwm[PWM_CH_NUM];
 
 static char _pwm_out;
 
+
+void UART1_Clear()
+{
+	UARTDR = 0xFF;
+}
+
+
+
 void pwm_setup( PWMINFO *pwm, int period, int duty )
 {
 	pwm->period 		= period;
@@ -183,15 +191,6 @@ void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
 	if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
 }
 
-void led_pwm_enable(int pwm1, int pwm2, int pwm3 )
-{
-	// 0:Disable 1:Enable -1:Don't care(not change)
-
-	// B/G/R
-	if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
-	if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
-	if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
-}
 
 //======================================================
 void setupOpMode()
@@ -207,7 +206,7 @@ void setupOpMode()
 void setMotorPWM()
 {	
 
-	if(UARTDR == 0x00)
+	if((UARTDR & 0x0F)== 0x00)
 	{
 		P1 &= 0x0F;
 		pwm_enable(0, -1, -1, -1);
@@ -219,11 +218,11 @@ void setMotorPWM()
 		pwm_enable( 1, -1,-1,-1 );
 		P1 |= 0x20;
 
-		if(UARTDR == 0x01) { pwm_setup( &_pwm[0], 10, 6 );}
-		else if(UARTDR == 0x02) { pwm_setup( &_pwm[0], 10, 7 );}
-		else if(UARTDR == 0x03) { pwm_setup( &_pwm[0], 10, 8 );}
-		else if(UARTDR == 0x04) { pwm_setup( &_pwm[0], 10, 9 );}
-		else if(UARTDR == 0x05) { pwm_setup( &_pwm[0], 10, 10 );}
+		if((UARTDR & 0x0F) == 0x01) { pwm_setup( &_pwm[0], 10, 6 );}
+		else if((UARTDR & 0x0F) == 0x02) { pwm_setup( &_pwm[0], 10, 7 );}
+		else if((UARTDR & 0x0F) == 0x03) { pwm_setup( &_pwm[0], 10, 8 );}
+		else if((UARTDR & 0x0F) == 0x04) { pwm_setup( &_pwm[0], 10, 9 );}
+		else if((UARTDR & 0x0F) == 0x05) { pwm_setup( &_pwm[0], 10, 10 );}
 
 		UART1_Clear();
 	}
@@ -258,7 +257,7 @@ void setLedPWM(int color) {
 		pwm_setup(&_pwm[1], 10, 10);
 		UART1_Clear();
 	}
-	else if(color == -1){ // red 100
+	else if(color == -1){ // white
 		pwm_enable(-1, 1, 1, 1);
 		pwm_setup(&_pwm[1], 10, 3);
 		pwm_setup(&_pwm[2], 10, 3);
@@ -267,17 +266,12 @@ void setLedPWM(int color) {
 	}
 }
 
+/*
 void setRelayCtrl(int color) {
 	
 }
 
-
-void UART1_Clear()
-{
-	UARTDR = 0xFF;
-}
-
-
+*/
 
 void UART_init()
 {
@@ -345,6 +339,8 @@ void port_init()
 
 void main()
 {
+	int i;
+	
 	cli();          	// disable INT. during peripheral setting
 	port_init();    	// initialize ports
 	clock_init();   	// initialize operation clock
@@ -355,50 +351,52 @@ void main()
 	sei();          	// enable INT.
 	
 	// TODO: add your main code here
-	UARTST = 0xFF;
+	UARTDR = 0xFF;
 	
+	setupOpMode();
+
 	while(1)
 	{		
 
-		if (UARTST < 0x06)
+
+		if ((UARTDR & 0x0F) < 0x06)
 			setMotorPWM();		
 
-		else if ( (UARTST > 0x0F) && (UARTST < 0x16))
+
+		if (((UARTDR & 0xF0) >> 4) < 0x06)
 		{
-			switch (UARTST) {
-				case 0x10: // 4
+			switch ((UARTDR & 0xF0) >> 4)
+				{
+				case 0x00: setLedPWM(-1); break;
+
+				case 0x01: // 4 R
 					setLedPWM(4);
 					break;
-				case 0x11: // 3
+				case 0x02: // 3 RG
 					setLedPWM(3);
 					break;
-				case 0x12: // 2
+				case 0x03: // 2 G
 					setLedPWM(2);
 					break;
-				case 0x13: // 1
+				case 0x04: // 1 GB
 					setLedPWM(1);
 					break;
-				case 0x14: // 0
+				case 0x05: // 0 B
 					setLedPWM(0);
 					break;
-				case 0x15: // 0
-					setLedPWM(-1);
-					break;
+				
 			}
+				
 			/*
 				dust sensor step
 				
-				very bad : 0x10 //R 4
-				bad:     : 0x11 //RG 3
-				soso     : 0x12 //G 2
-				good     : 0x13 //GB 1
-				very good: 0x14 //B 0
-		*/
+				very bad : 0x01 //R 4
+				bad:     : 0x01 //RG 3
+				soso     : 0x02 //G 2
+				good     : 0x04 //GB 1
+				very good: 0x05 //B 0
+	   	*/
 		}
-		else if((UARTST == 0x16)) { // relay switch
-			
-		}
-		
 		
 		for (i= 0; i < 10; i++)
 		{
@@ -406,6 +404,6 @@ void main()
 			pwm_control_LED();
 		}
 		
+		
 	}
 }
-
