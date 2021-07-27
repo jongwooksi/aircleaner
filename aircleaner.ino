@@ -3,11 +3,11 @@
 #include <SPI.h>
 #include <SD.h>
 #include <FS.h>
-#include <esp_camera.h>
+//#include <esp_camera.h>
 #include <HTTPClient.h>
 #include <LovyanGFX.hpp>
 #include "makerfabs_pin.h"
-#define CAMERA_MODEL_MAKERFABS
+//#define CAMERA_MODEL_MAKERFABS
 #define WIFI_MODE
 #define ARRAY_LENGTH 320 * 240 * 3
 #define SCRENN_ROTATION 3
@@ -44,6 +44,13 @@ WiFiClient client;
 #define DUST_OFF_RX digitalWrite(DUST_RX, LOW)
 #define DUST_ON_RX digitalWrite(DUST_TX, HIGH)
 #define DUST_OFF_TX digitalWrite(DUST_RX, LOW)
+
+#define PWM_TX 19
+#define PWM_RX 18
+#define PWM_ON_TX digitalWrite(PWM_TX, HIGH)
+#define PWM_OFF_RX digitalWrite(PWM_RX, LOW)
+#define PWM_ON_RX digitalWrite(PWM_TX, HIGH)
+#define PWM_OFF_TX digitalWrite(PWM_RX, LOW)
 
 
 
@@ -102,13 +109,14 @@ const char* ssid = "jongwooksi";
 const char* password = "0000000000";
 
 SoftwareSerial dustSensor(DUST_RX, DUST_TX); // RX, TX
-              
+SoftwareSerial ABOVBoard(PWM_RX, PWM_TX); // RX, TX
+                    
 void setup()
 {
     esp32_init();
     wifi_init();
     dustSensor_init();
-  
+    ABOVBoard_init();
 }
 
 void loop()
@@ -683,30 +691,34 @@ void checkDust()
     }
 }
 
+void ABOVBoard_init()
+{
+  ABOVBoard.begin(9600);
+}
 
 void checkAbovPWM()
 {
   
   if (volume == 0)
-    Wire.write(0x00);
+    ABOVBoard.write((byte)0x00);
 
   else if (volume == 1)
-    Wire.write(0x01);
+    ABOVBoard.write((byte)0x01);
 
   else if (volume == 2)
-    Wire.write(0x02);
+    ABOVBoard.write((byte)0x02);
 
   else if (volume == 3)
-    Wire.write(0x04);
+    ABOVBoard.write((byte)0x03);
   
   else if (volume == 4)
-    Wire.write(0x08);
+    ABOVBoard.write((byte)0x04);
 
   else if (volume == 5)
-    Wire.write(0x10);
+    ABOVBoard.write((byte)0x05);
 
 
-  Serial.println(Wire.endTransmission());
+
 
 
   delay(100);

@@ -7,8 +7,6 @@
 #define		MAIN	1
 
 // Generated    : Thu, Mar 17, 2016 (21:23:38)
-#include <stdio.h>
-#include <string.h>
 #include	"MC96FR332A.h"
 #include	"func_def.h"
 
@@ -26,157 +24,21 @@
 // ----------------------------------
 #define PWM_CH_NUM		4
 
- 
 
-unsigned int _uart_tx_count, _uart_rx_count;
-unsigned int _uart_tx_len,   _uart_rx_len;
-
-bit _uart_tx_complete = 0;
-bit _uart_rx_complete = 0;
-
-unsigned char _uart_tx_err = 0;
-unsigned char _uart_rx_err = 0;
-unsigned char UART_BUFFER_SIZE = 8;
-unsigned char _uart_rx_buf[8] = {0};
-unsigned char _uart_tx_buf[8] = {0};
-
-unsigned int _IdleCounter = 0;
+#include <intrins.h>
+#include "MC96FR332A.h"		  
 
 
+unsigned int _i2c_tx_len, _i2c_tx_count;
+unsigned int _i2c_rx_len, _i2c_rx_count;
 
-void UART1_Clear()
-{
-	int i;
+bit _i2c_start_capture=0;
+bit _i2c_rx_complete=0;
+bit _i2c_tx_complete=0;
 
-	_uart_tx_count = 0;
-	_uart_rx_count = 0;
-
-	for(i=0; i < UART_BUFFER_SIZE; i++) {
-		_uart_rx_buf[i] = 0;
-		_uart_tx_buf[i] = 0;
-	}
-	UDATA1 = 0xFF;
-	
-}
-
-
-void UART1_Init()
-{
-	char cc01, cc02, cc03;
-
-	//UDRIE TXCIE RXCIE WAKEIE TXE RXE USARTEN U2X
-	cc02 = ( 0 << 7 ) // 0   : Transmit data empty interrupt disable 
-						//_1   : Transmit data empty interrupt enable
-			|( 0 << 6 ) // 0   : Transmit completed interrupt disable 
-						//_1   : Transmit completed interrupt enable
-			|( 0 << 5 ) // 0   : Recv completed Interrupt disable 
-						//_1   : Recv completed Interrupt enable
-			|( 0 << 4 ) // 0   : Wake up interrupt disable
-						//_1   : Wake up interrupt enable
-			|( 0 << 3 ) // 0   : TX disable
-						//_1   : TX enable
-			|( 1 << 2 ) // 0   : Rx disable
-						//_1   : Rx enable
-			|( 1 << 1 ) // 0   : USART disable
-						//_1   : USART enable
-			|( 1 << 0 );// 0   : Double speed disable in Asyncronous mode
-						//_1   : Double speed enable in Asyncronous mode
-
-	//Synchronous mode 
-	//UMSEL1 UMSEL0 UPM1 UPM0 USIZE2 USIZE1(UDORD) USIZE0(UCPHA) UCPOL
-	cc01 = ( 0 << 7 ) // 00  : Asyncronous mode( Uart ) 
-			|( 0 << 6 ) // 01  : Syncronouse mode
-						//_11  : SPI mode
-			|( 0 << 5 ) // 00  : No parity
-			|( 0 << 4 ) // 10  : Even parity
-						//_11  : Odd parity
-			|( 0 << 3 ) // 000 : 5 bit data frame 
-			|( 1 << 2 ) // 001 : 6 bit data frame   
-			|( 1 << 1 ) // 010 : 7 bit data frame    
-						// 011 : 8 bit data frame
-						//_111 : 9 bit data frame
-			|( 0 << 0 );// 0   : In syncronouse mode -> TXD change at rising, RXD change at falling
-						// 1   : In syncronouse mode -> RXD change at rising, TXD change at falling
-
-
-	//MASTER LOOPS DISXCK SPISS - USBS TX8 RX8
-	cc03 = ( 0 << 7 ) 	// 0   : Slave mode ( XCL in ) in SPI and Syncronous mode
-						//_1   : Master mode ( XCL out ) in SPI and Syncronous mode
-			|( 0 << 6 ) // 0   : Normal mode
-						//_1   : Loop back mode
-			|( 0 << 5 ) // 0   : XCK out always ( when only USART is enabled ) ,in Sync mode
-						//_1   : XCK out when only TX is tranmitting           ,in Sync mode
-			|( 0 << 4 ) // 0   : SS out disable in SPI Master mode
-						//_1   : SS out enable in SPI Master mode
-			|( 0 << 3 ) //     : nothing
-			|( 0 << 2 ) // 0   : 1 stop bit in UART mode	//V1.4
-						//_1   : 2 stop bit in UART mode
-			|( 0 << 1 ) // x   : 9th TX data bit in UART mode
-			|( 0 << 0 );// x   : 9th RX data bit in UART mode 
-
-
-	UCTRL12=0x00;
-	UCTRL11=0x00;
-	UCTRL13=0x00;
-
-	UCTRL12=0x02;	//UDRIE TXCIE RXCIE WAKEIE TXE RXE USARTEN U2X
-	UCTRL12=cc02;	//UDRIE TXCIE RXCIE WAKEIE TXE RXE USARTEN U2X
-	UCTRL11=cc01;	//UMSEL1 UMSEL0 UPM1 UPM0 USIZE2 USIZE1(UDORD) USIZE0(UCPHA) UCPOL
-	UCTRL13=cc03;  //MASTER LOOPS DISXCK SPISS - USBS TX8 RX8
-
-	//UBAUD1 = 3;  //115200 bps : 4.000000 MHz, ubaud=3  (ERROR:8.5%, U2X=1)
-	//UBAUD1 = 7;  //115200 bps : 7.372800 MHz, ubaud=7  (ERROR:0%, U2X=1)
-	//UBAUD1 = 95; //9600	  bps : 7.372800 MHz, ubaud=95 (ERROR:0%, U2X=1)
-	UBAUD1 = 95;
-
-	USTAT1=0x60;	  //UDRE TXC RXC WAKE SOFTRST DOR FE PE 
-
-	// Interrupt Priority Register (IP, IP1)
-	//IP	|= 0x04;	//RX0(GROUP2)
-	//IP1	|= 0x04;	//RX0(GROUP2)
-
-
-	//IE1	|= 0x20;  //- - INT11E(RX1) INT10E(TX0) INT9E(RX0) INT8E(BOD) INT7E(IRI) INT6E(Reserved)
-	//IE2	|= 0x01;  //- - INT17E(I2C) INT16E(T3) INT15E(T2) INT14E(T1) INT13E(T0) INT12E(TX1)
-
-	_uart_rx_count = 0;
-	_uart_tx_count = 0;
-
-
-	//cc01 = UDATA1;
-}
-
-
-
-
-void RX1_Int()
-{
-	unsigned char RX0Data;
-
-	RX0Data = UDATA1;
-
-	//strcpy(_uart_rx_buf, UDATA1);
-	
-	if(USTAT1 & 0x03) 	//UDRE TXC RXC WAKE SOFTRST DOR FE PE
-	{
-	}
-
-	else if(_uart_rx_count == 0)
-	{
-		_uart_rx_len = 8;
-		_uart_rx_buf[0] = RX0Data;
-		_uart_rx_count = 1;
-	}
-	
-	while (_uart_rx_count < 7)
-	{
-		
-		_uart_rx_buf[_uart_rx_count] = RX0Data;
-		_uart_rx_count++;
-
-		//RESET_IDLE;
-	}
-}
+unsigned char _i2c_rx_err=0;
+unsigned char _i2c_tx_err=0;
+unsigned int _i2c_rx_buf[8] = {0};
 
 
 
@@ -190,6 +52,15 @@ typedef struct _tagPWMINFO {
 } PWMINFO;
 
 
+static unsigned int _OP_MODE = 0;
+static unsigned int _OP_MODE_ON_CHANGE = 0;
+static unsigned int _ENABLE_COLOR_LOOP = 0;
+static unsigned int _COLOR_LOOP_INDEX = 0;
+
+static unsigned int _btn0_pressed = 0;
+static unsigned int _btn1_pressed = 0;
+static unsigned int _btn0_elapse_cnt = 0;
+static unsigned int _btn1_elapse_cnt = 0;
 
 static unsigned int _pwm_ctl_dec_flag = 0;
 static unsigned int _pwm_ctl_inc_flag = 0;
@@ -197,7 +68,9 @@ static unsigned int _pwm_ctl_cnt = 0;
 
 static unsigned int _pwm_flag_list[PWM_CH_NUM] = { PWM0_FLAG, PWM1_FLAG, PWM2_FLAG, PWM3_FLAG };
 
+static unsigned int _colorDelayCount = 0;
 
+static unsigned int _global_ctl_flag = 0;
 
 // ----------------------------------
 static int _pwm_mask = 0x0f;	// Enable Mask : - - - - PWM3 PWM2 PWM1 PWM0
@@ -211,6 +84,14 @@ static char _pwm_out;
 //======================================================
 // peripheral setting routines
 //======================================================
+
+void BOD_init()
+{
+	// initialize BOD (Brown out detector)
+	// BODR bit2~1 = BODout selection
+	// - default is 00 (BODout1)
+	BODR = 0x01;    	// setting
+}
 
 void clock_init()
 {
@@ -229,7 +110,7 @@ void port_init()
 	P0   = 0x00;    	// port initial value
 
 	// P1
-	P1IO = 0x00;    	// direction
+	P1IO = 0xFF;    	// direction
 	P1PU = 0x00;    	// pullup
 	P1OD = 0x00;    	// open drain
 	P1BPC = 0x00;   	// BPC
@@ -243,13 +124,13 @@ void port_init()
 	P2   = 0x00;    	// port initial value
 
 	// P3
-	P3IO = 0xFF;    	// direction
+	P3IO = 0xBF;    	// direction
 	P3PU = 0xFF;    	// pullup
 	P3OD = 0x00;    	// open drain
 	P3BPC = 0x00;   	// BPC
 	P3   = 0x00;    	// port initial value
 
-	PSR0 = 0x00;    	// port selection
+	PSR0 = 0xC0;    	// port selection
 						// SDASWAP SCLSWAP SS0SWAP XCK0SWAP INT3SWAP INT2SWAP INT1SWAP INT0SWAP
 						// INT3SWAP = 1 : External interrupt 3 is triggered on P15 instead of P22
 						// INT2SWAP = 1 : External interrupt 2 is triggered on P14 instead of P21
@@ -429,58 +310,60 @@ void setupOpMode()
 
 
 
+void I2C_Init(void)
+{
+
+	_i2c_tx_count = 0;
+	_i2c_rx_count = 0;
+
+
+	//IE2 |= 0x20;	// Enable I2C interrupt Enable	// - - INT17E(I2C) INT16E(T3) INT15E(T2) INT14E(T1) INT13E(T0) INT12E(UART-RX1)
+	//;
+	IP	= 0x20;	//I2C(GROUP5) 
+	IP1	= 0x20;	//I2C(GROUP5) 
+
+	I2CMR = 0x20; // I2C RESET	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x00; // I2C clear	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x20; // I2C RESET	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x40; // I2C enable	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	I2CMR = 0x50;//IICEN, I2C interrupt enable, SLAVE default mode	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+
+
+ 	// SCL Low Period  = tsclk * (4 * SCLLR + 1)
+	// SCL High Period = tsclk * (4 * SCLHR + 3)
+	// fI2C = 1/ { tsclk * (4 * (SCLLR + SCLHR) + 4) }
+	//
+	// fI2C = 200 kHz in (SCLLR + SCLHR) = 4 at 4MHz(tsclk = 0.25 us)
+	I2CSCLLR = 2;
+	I2CSCLHR = 2; // 
+	I2CSDAHR = 2; // SDA hold time 
+	//
+	//= 0xFF;	  //GCALL TEND STOP SSEL MLOST BUSY TMODE RXACK
+
+	//I2CSAR = SELF_ADDRESS; // self address is 0xA0
+	I2CMR = 0x40 | 0x10 | 0x08;	//IICEN+INTEN+ACKEN; //IIF IICEN RESET INTEN ACKEN MASTER STOP START
+}
+
+
+
+ void I2C_Clear(void)
+{
+	int i;
+
+	for(i = 0; i < 8; i++) {
+		_i2c_rx_buf[i] = 0;
+	}
+
+	_i2c_rx_count = 0;
+	_i2c_rx_err = 0;
+}
+
 
 
 void setPWM()
-{	
-
-	if(UDATA1 == 0x00)
-	{
-		pwm_enable(0, -1, -1, -1);
-		UART1_Clear();
-	}
-			
-	else if(UDATA1 == 0x01)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 6 );
-		UART1_Clear();
-	}
-		
-	else if(UDATA1 == 0x02)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 7 );
-		UART1_Clear();
-	}	
-
-	else if(UDATA1 == 0x03)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 8 );
-		UART1_Clear();
-	}	
-	
-	else if(UDATA1 == 0x04)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 9 );
-		UART1_Clear();
-	}	
-
-	
-	else if(UDATA1 == 0x05)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 10 );
-		UART1_Clear();
-	}
-
-	
-	
-	/*
+{
 	if (_i2c_rx_buf == 0x00 )
-		pwm_enable(0, 0, 0, -1);
+		pwm_enable(0, -1, -1, -1);
 	
 	else if (_i2c_rx_buf == 0x01 )
 		pwm_setup( &_pwm[0], 10, 6 );
@@ -496,12 +379,52 @@ void setPWM()
 	
 	else if (_i2c_rx_buf == 0x10 )
 		pwm_setup( &_pwm[0], 10, 10 );
-	*/
 	
-	
+	I2C_Clear();
 }
 
 
+void I2C_do_slave(void)
+{
+	unsigned char I2C_Data;
+
+	if(I2CSR & 0x01) // RXACK OK?	 //GCALL TEND STOP SSEL MLOST BUSY TMODE RXACK
+	{ 
+		if(_i2c_rx_count < _i2c_rx_len)
+		{ 
+			I2C_Data = I2CDR;
+			_i2c_rx_buf[ _i2c_rx_count ] = I2C_Data;
+
+			_i2c_rx_count++;
+
+			if(_i2c_rx_count >= _i2c_rx_len) 
+			{
+				_i2c_rx_complete = 1;
+				_i2c_rx_err = 0;
+				_i2c_start_capture = 0;
+				setPWM();
+			}
+
+		}
+		else  
+		{
+			_i2c_rx_complete = 1;
+			_i2c_rx_err = 1;
+			_i2c_start_capture = 0;
+			I2CMR |= 0x02; // STOP generation 	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+		}
+
+	}
+	else  // RXACK fail?
+	{
+		_i2c_rx_complete = 1;
+		_i2c_rx_err = 2;
+		_i2c_start_capture = 0;
+
+		I2CMR |= 0x02; // STOP generation 	//IIF IICEN RESET INTEN ACKEN MASTER STOP START
+	}
+
+}
 
 
 
@@ -511,33 +434,26 @@ void setPWM()
 void main()
 {
 	int i;
-	int datalength = 0;
-	
+
 	cli();          	// disable INT. during peripheral setting
 	port_init();    	// initialize ports
 	clock_init();   	// initialize operation clock
 	pwm_enable( 1, 1, 1, 1 );	
 	pwm_init();
 	timer_init();
-	UART1_Init();
+	
+	I2C_Init();
+	I2C_Clear();
 
 	sei();          	// enable INT.
 
-	UDATA1 = 0xFF;
-	
+
 	for(i = 0; i < 1000; i++) _nop_();	// init delay
 	setupOpMode();
 
-	while(1)
-	{		
-		for (i= 0; i < 10; i++)
-			pwm_control();
-		
-		if (UDATA1 < 0x06)
-		{
-			setPWM();
-			//pwm_control();
-		}
-		
+	while(1) {
+		I2C_do_slave();
+		pwm_control();
+
 	}
 }
