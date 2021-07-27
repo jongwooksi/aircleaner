@@ -103,7 +103,6 @@ void pwm_setup_control( unsigned int pwmflag, unsigned int ctl )
 //======================================================
 void pwm_control_Motor()
 {
-
 	// PWM Motor
 	if( _pwm[0].count < _pwm[0].duty && (_pwm_mask & PWM0_FLAG) ) {
 		P3 = 0x20;	// P35
@@ -117,12 +116,14 @@ void pwm_control_Motor()
 		_pwm[0].duty  = _pwm[0].next_duty;
 		P3 = 0x00;
 	}
-
 }
 
 
 void pwm_control_LED()
 {
+
+	_pwm_out = 0;
+	
 	// PWM 1
 	if( _pwm[1].count < _pwm[1].duty && (_pwm_mask & PWM1_FLAG) ) {
 		_pwm_out |= 0x02;	// P11
@@ -162,11 +163,14 @@ void pwm_control_LED()
 		_pwm[3].duty  = _pwm[3].next_duty;
 	}
 
-
-	P1 = _pwm_out;
+	
+	P1 &= 0xF0;
+	P1 |= _pwm_out; 
 
 	
 }
+
+
 
 void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
 {
@@ -174,6 +178,16 @@ void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
 
 	// B/G/R/Motor
 	if( pwm0 != -1 ) { if( pwm0 ) _pwm_mask |= PWM0_FLAG; else _pwm_mask &= ~PWM0_FLAG; }
+	if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
+	if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
+	if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
+}
+
+void led_pwm_enable(int pwm1, int pwm2, int pwm3 )
+{
+	// 0:Disable 1:Enable -1:Don't care(not change)
+
+	// B/G/R
 	if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
 	if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
 	if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
@@ -195,45 +209,66 @@ void setMotorPWM()
 
 	if(UARTDR == 0x00)
 	{
+		P1 &= 0x0F;
 		pwm_enable(0, -1, -1, -1);
 		UART1_Clear();
 	}
 	
-	else if(UARTDR == 0x01)
+	else
 	{
 		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 6 );
+		P1 |= 0x20;
+
+		if(UARTDR == 0x01) { pwm_setup( &_pwm[0], 10, 6 );}
+		else if(UARTDR == 0x02) { pwm_setup( &_pwm[0], 10, 7 );}
+		else if(UARTDR == 0x03) { pwm_setup( &_pwm[0], 10, 8 );}
+		else if(UARTDR == 0x04) { pwm_setup( &_pwm[0], 10, 9 );}
+		else if(UARTDR == 0x05) { pwm_setup( &_pwm[0], 10, 10 );}
+
 		UART1_Clear();
 	}
-		
-	else if(UARTDR == 0x02)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 7 );
-		UART1_Clear();
-	}	
-
-	else if(UARTDR == 0x03)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 8 );
-		UART1_Clear();
-	}	
 	
-	else if(UARTDR == 0x04)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 9 );
-		UART1_Clear();
-	}	
+}
 
-	
-	else if(UARTDR == 0x05)
-	{
-		pwm_enable( 1, -1,-1,-1 );
-		pwm_setup( &_pwm[0], 10, 10 );
+void setLedPWM(int color) {
+	if(color == 0){ // blue 001
+		pwm_enable(-1, 0, 0, 1);
+		pwm_setup(&_pwm[3], 10, 10);
 		UART1_Clear();
 	}
+	else if(color == 1){ // blue+green 011
+		pwm_enable(-1, 0, 1, 1);
+		pwm_setup(&_pwm[2], 10, 5);
+		pwm_setup(&_pwm[3], 10, 5);
+		UART1_Clear();
+	}
+	else if(color == 2){ // green 010
+		pwm_enable(-1, 0, 1, 0);
+		pwm_setup(&_pwm[2], 10, 10);
+		UART1_Clear();
+	}
+	else if(color == 3){ // green + red 110
+		pwm_enable(-1, 1, 1, 0);
+		pwm_setup(&_pwm[1], 10, 5);
+		pwm_setup(&_pwm[2], 10, 5);
+		UART1_Clear();
+	}
+	else if(color == 4){ // red 100
+		pwm_enable(-1, 1, 0, 0);
+		pwm_setup(&_pwm[1], 10, 10);
+		UART1_Clear();
+	}
+	else if(color == -1){ // red 100
+		pwm_enable(-1, 1, 1, 1);
+		pwm_setup(&_pwm[1], 10, 3);
+		pwm_setup(&_pwm[2], 10, 3);
+		pwm_setup(&_pwm[3], 10, 3);
+		UART1_Clear();
+	}
+}
+
+void setRelayCtrl(int color) {
+	
 }
 
 
@@ -254,7 +289,7 @@ void UART_init()
 	UARTCR3 = 0x00; 	// stop bit
 	UARTBD = 0x0C;  	// baud rate
 	UARTST=0x60;	  //UDRE TXC RXC WAKE SOFTRST DOR FE PE 
-
+  // 0x40
 }
 
 
@@ -314,7 +349,7 @@ void main()
 	port_init();    	// initialize ports
 	clock_init();   	// initialize operation clock
 	UART_init();    	// initialize UART interface
-	pwm_enable( 1, 1, 1, 1 );	
+	pwm_enable( 0, 1, 1, 1 ); // Motor/ R/ G/ B	
 	pwm_init();
 	
 	sei();          	// enable INT.
@@ -324,29 +359,53 @@ void main()
 	
 	while(1)
 	{		
-		for (i= 0; i < 10; i++)
-			pwm_control();
-		
+
 		if (UARTST < 0x06)
+			setMotorPWM();		
+
+		else if ( (UARTST > 0x0F) && (UARTST < 0x16))
 		{
-			setMotorPWM();
-		}
-		
-		else if ( (UARTST > 0x0F) && (UARTST < 0x15))
-		{
+			switch (UARTST) {
+				case 0x10: // 4
+					setLedPWM(4);
+					break;
+				case 0x11: // 3
+					setLedPWM(3);
+					break;
+				case 0x12: // 2
+					setLedPWM(2);
+					break;
+				case 0x13: // 1
+					setLedPWM(1);
+					break;
+				case 0x14: // 0
+					setLedPWM(0);
+					break;
+				case 0x15: // 0
+					setLedPWM(-1);
+					break;
+			}
 			/*
 				dust sensor step
 				
-				very bad : 0x10 //R
-				bad:     : 0x11 
-				soso     : 0x12 
-				good     : 0x13 //
-				very good: 0x14 //G or B
-				
-					
+				very bad : 0x10 //R 4
+				bad:     : 0x11 //RG 3
+				soso     : 0x12 //G 2
+				good     : 0x13 //GB 1
+				very good: 0x14 //B 0
 		*/
 		}
-
+		else if((UARTST == 0x16)) { // relay switch
+			
+		}
+		
+		
+		for (i= 0; i < 10; i++)
+		{
+			pwm_control_Motor();
+			pwm_control_LED();
+		}
+		
 	}
 }
 
