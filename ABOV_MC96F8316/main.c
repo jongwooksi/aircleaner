@@ -73,10 +73,10 @@ void pwm_setup( PWMINFO *pwm, int period, int duty )
 void pwm_init()
 {
 
-	pwm_setup( &_pwm[0], 10, 0 );
-	pwm_setup( &_pwm[1], 10, 7 );
-	pwm_setup( &_pwm[2], 10, 8 );
-	pwm_setup( &_pwm[3], 10, 9 );
+	pwm_setup( &_pwm[0], 10, 0 ); // 35
+	pwm_setup( &_pwm[1], 10, 7 ); // 11
+	pwm_setup( &_pwm[2], 10, 8 ); // 12
+	pwm_setup( &_pwm[3], 10, 9 ); // 13
 
 }
 
@@ -198,7 +198,7 @@ void setMotorPWM()
 		pwm_enable(0, -1, -1, -1);
 		UART1_Clear();
 	}
-			
+	
 	else if(UARTDR == 0x01)
 	{
 		pwm_enable( 1, -1,-1,-1 );
@@ -332,8 +332,21 @@ void main()
 			setMotorPWM();
 		}
 		
-		
-		
+		else if ( (UARTST > 0x0F) && (UARTST < 0x15))
+		{
+			/*
+				dust sensor step
+				
+				very bad : 0x10 //R
+				bad:     : 0x11 
+				soso     : 0x12 
+				good     : 0x13 //
+				very good: 0x14 //G or B
+				
+					
+		*/
+		}
+
 	}
 }
 
