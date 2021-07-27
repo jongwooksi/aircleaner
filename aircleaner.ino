@@ -107,6 +107,9 @@ const char *bars[2] =
 
 const char* ssid = "jongwooksi"; 
 const char* password = "0000000000";
+int updatecount = 0;
+
+int PM10 = -1;
 
 SoftwareSerial dustSensor(DUST_RX, DUST_TX); // RX, TX
 SoftwareSerial ABOVBoard(PWM_RX, PWM_TX); // RX, TX
@@ -117,6 +120,7 @@ void setup()
     wifi_init();
     dustSensor_init();
     ABOVBoard_init();
+    sendDustValue();
 }
 
 void loop()
@@ -128,7 +132,15 @@ void loop()
   if ((conn == 1) && (stage==0))
   {
     delay(100);
-    drawTime(); 
+    drawTime();
+    updatecount ++;
+
+    if (updatecount == 600)
+    {
+      updatecount = 0;
+      checkDust(); 
+      sendDustValue();
+    }
   }
 
   if (initWashFlag)
@@ -658,7 +670,7 @@ void checkDust()
         
         int PM1_0=(pms[10]<<8)|pms[11];
         int PM2_5=(pms[12]<<8)|pms[13];
-        int PM10 =(pms[14]<<8)|pms[15];
+        PM10 =(pms[14]<<8)|pms[15];
 
         
         
@@ -696,6 +708,20 @@ void ABOVBoard_init()
   ABOVBoard.begin(9600);
 }
 
+void sendDustValue()
+{
+  if ( (PM10 >= 0 ) && (PM10 < 30 )) // good
+    ABOVBoard.write((byte)0x10);
+  else if ( (PM10 >= 30 ) && (PM10 < 80 )) // soso
+    ABOVBoard.write((byte)0x20);
+  else if ( (PM10 >= 80 ) && (PM10 < 150 )) // bad
+    ABOVBoard.write((byte)0x30);
+  else if ( PM10 > 150 ) // very bad
+    ABOVBoard.write((byte)0x40);
+  else if ( PM10 == -1 ) // power on
+    ABOVBoard.write((byte)0x00);
+  
+}
 void checkAbovPWM()
 {
   
