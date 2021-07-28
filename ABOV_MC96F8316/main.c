@@ -82,9 +82,9 @@ void pwm_init()
 {
 
 	pwm_setup( &_pwm[0], 10, 0 ); // 35
-	pwm_setup( &_pwm[1], 10, 7 ); // 11
-	pwm_setup( &_pwm[2], 10, 8 ); // 12
-	pwm_setup( &_pwm[3], 10, 9 ); // 13
+	pwm_setup( &_pwm[1], 10, 5 ); // 11
+	pwm_setup( &_pwm[2], 10, 5 ); // 12
+	pwm_setup( &_pwm[3], 10, 5 ); // 13
 
 }
 
@@ -172,7 +172,7 @@ void pwm_control_LED()
 	}
 
 	
-	P1 &= 0xF0;
+	//P1 &= 0xFF;
 	P1 |= _pwm_out; 
 
 	
@@ -210,6 +210,7 @@ void setMotorPWM()
 	{
 		P1 &= 0x0F;
 		pwm_enable(0, -1, -1, -1);
+		pwm_setup( &_pwm[0], 10, 0 );
 		UART1_Clear();
 	}
 	
@@ -229,41 +230,59 @@ void setMotorPWM()
 	
 }
 
-void setLedPWM(int color) {
-	if(color == 0){ // blue 001
-		pwm_enable(-1, 0, 0, 1);
-		pwm_setup(&_pwm[3], 10, 10);
-		UART1_Clear();
-	}
-	else if(color == 1){ // blue+green 011
-		pwm_enable(-1, 0, 1, 1);
-		pwm_setup(&_pwm[2], 10, 5);
-		pwm_setup(&_pwm[3], 10, 5);
-		UART1_Clear();
-	}
-	else if(color == 2){ // green 010
-		pwm_enable(-1, 0, 1, 0);
-		pwm_setup(&_pwm[2], 10, 10);
-		UART1_Clear();
-	}
-	else if(color == 3){ // green + red 110
+void setLedPWM(int color) { 
+	
+	/* 
+	B : On
+	G : Good
+	Y : So So
+	M : Bad
+	R : very Bad
+	
+	*/
+	
+	if(color == 0){ // B : on
 		pwm_enable(-1, 1, 1, 0);
-		pwm_setup(&_pwm[1], 10, 5);
-		pwm_setup(&_pwm[2], 10, 5);
+		pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
+		pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
+		pwm_setup_control( PWM3_FLAG, PWM_CTL_INC );
 		UART1_Clear();
 	}
-	else if(color == 4){ // red 100
-		pwm_enable(-1, 1, 0, 0);
-		pwm_setup(&_pwm[1], 10, 10);
+	
+	else if(color == 1){ // G : Good
+		pwm_enable(-1, 1, 0, 1);
+		pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
+		pwm_setup_control( PWM2_FLAG, PWM_CTL_INC );
+		pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
 		UART1_Clear();
 	}
-	else if(color == -1){ // white
-		pwm_enable(-1, 1, 1, 1);
-		pwm_setup(&_pwm[1], 10, 3);
-		pwm_setup(&_pwm[2], 10, 3);
-		pwm_setup(&_pwm[3], 10, 3);
+		
+	else if(color == 2){ // Y : So So
+		pwm_enable(-1, 0, 0, 1);
+		pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
+		pwm_setup_control( PWM2_FLAG, PWM_CTL_INC );
+		pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
 		UART1_Clear();
 	}
+
+	
+	else if(color == 3){ // M : Bad
+		pwm_enable(-1, 0, 1, 0);
+		pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
+		pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
+		pwm_setup_control( PWM3_FLAG, PWM_CTL_INC );
+		UART1_Clear();
+	}
+
+	else if(color == 4){ // R : very Bad
+		pwm_enable(-1, 0, 1, 1);
+		pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
+		pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
+		pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
+		UART1_Clear();
+	}
+
+	
 }
 
 /*
@@ -335,7 +354,7 @@ void port_init()
 	P3FSR = 0x01;   	// P3 selection
 }
 
-
+int asd;
 
 void main()
 {
@@ -347,55 +366,44 @@ void main()
 	UART_init();    	// initialize UART interface
 	pwm_enable( 0, 1, 1, 1 ); // Motor/ R/ G/ B	
 	pwm_init();
-	
+	pwm_control_Motor();
+	pwm_control_LED();
 	sei();          	// enable INT.
+
+	asd = 0;
 	
 	// TODO: add your main code here
 	UARTDR = 0xFF;
 	
 	setupOpMode();
-
+	
 	while(1)
 	{		
-
-
 		if ((UARTDR & 0x0F) < 0x06)
 			setMotorPWM();		
 
 
-		if (((UARTDR & 0xF0) >> 4) < 0x06)
+		if (((UARTDR & 0xF0) >> 4) < 0x05)
 		{
 			switch ((UARTDR & 0xF0) >> 4)
 				{
-				case 0x00: setLedPWM(-1); break;
-
-				case 0x01: // 4 R
-					setLedPWM(4);
+				case 0x00: 
+					setLedPWM(0); 
 					break;
-				case 0x02: // 3 RG
-					setLedPWM(3);
-					break;
-				case 0x03: // 2 G
-					setLedPWM(2);
-					break;
-				case 0x04: // 1 GB
+				case 0x01: 
 					setLedPWM(1);
 					break;
-				case 0x05: // 0 B
-					setLedPWM(0);
+				case 0x02: 
+					setLedPWM(2);
 					break;
-				
+				case 0x03: 
+					setLedPWM(3);
+					break;
+				case 0x04:
+					setLedPWM(4);
+					break;
+
 			}
-				
-			/*
-				dust sensor step
-				
-				very bad : 0x01 //R 4
-				bad:     : 0x01 //RG 3
-				soso     : 0x02 //G 2
-				good     : 0x04 //GB 1
-				very good: 0x05 //B 0
-	   	*/
 		}
 		
 		for (i= 0; i < 10; i++)
@@ -403,7 +411,5 @@ void main()
 			pwm_control_Motor();
 			pwm_control_LED();
 		}
-		
-		
 	}
 }
