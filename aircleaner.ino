@@ -716,7 +716,7 @@ void sendDustValue()
     ABOVBoard.write((byte)0x20);
   else if ( (PM10 >= 80 ) && (PM10 < 150 )) // bad
     ABOVBoard.write((byte)0x30);
-  else if ( PM10 > 150 ) // very bad
+  else if ( PM10 >= 150 ) // very bad
     ABOVBoard.write((byte)0x40);
   else if ( PM10 == -1 ) // power on
     ABOVBoard.write((byte)0x00);
