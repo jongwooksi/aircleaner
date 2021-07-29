@@ -1,4 +1,4 @@
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    07/29/2021  11:01:12  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    07/29/2021  13:08:58  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.22.2.0, INVOKED BY:
@@ -45,11 +45,11 @@ LINK MAP OF MODULE:  MC96F8316 (?C_STARTUP)
             CODE    0D9DH     004CH     UNIT         ?C?LIB_CODE
             CODE    0DE9H     0035H     UNIT         ?PR?PORT_INIT?MAIN
             CODE    0E1EH     0033H     UNIT         ?PR?PWM_INIT?MAIN
-            CODE    0E51H     0024H     UNIT         ?PR?SETUPOPMODE?MAIN
-            CODE    0E75H     0020H     UNIT         ?C_INITSEG
-            CODE    0E95H     0013H     UNIT         ?PR?UART_INIT?MAIN
-            CODE    0EA8H     0004H     UNIT         ?PR?UART1_CLEAR?MAIN
-            CODE    0EACH     0001H     UNIT         ?PR?CLOCK_INIT?MAIN
+            CODE    0E51H     0025H     UNIT         ?C_INITSEG
+            CODE    0E76H     0024H     UNIT         ?PR?SETUPOPMODE?MAIN
+            CODE    0E9AH     0013H     UNIT         ?PR?UART_INIT?MAIN
+            CODE    0EADH     0004H     UNIT         ?PR?UART1_CLEAR?MAIN
+            CODE    0EB1H     0001H     UNIT         ?PR?CLOCK_INIT?MAIN
 
 
 
@@ -59,7 +59,7 @@ OVERLAY MAP OF MODULE:   MC96F8316 (?C_STARTUP)
 SEGMENT                               XDATA_GROUP
   +--> CALLED SEGMENT               START    LENGTH
 ---------------------------------------------------
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 2
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 2
 
 
 ?C_C51STARTUP                       -----    -----
@@ -119,7 +119,7 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   N:0100H         SYMBOL        IBPSTACKTOP
   N:0100H         SYMBOL        IDATALEN
   C:0B77H         SYMBOL        IDATALOOP
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 3
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 3
 
 
   N:0000H         SYMBOL        PBPSTACK
@@ -173,30 +173,30 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   D:00B9H         PUBLIC        P2IO
   D:00C1H         PUBLIC        P3IO
   C:0C13H         PUBLIC        _pwm_enable
-  C:0EACH         PUBLIC        clock_init
+  C:0EB1H         PUBLIC        clock_init
   D:00ACH         PUBLIC        P0PU
   C:0951H         PUBLIC        main
   D:00ADH         PUBLIC        P1PU
   D:00AEH         PUBLIC        P2PU
   D:00AFH         PUBLIC        P3PU
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 4
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 4
 
 
   X:0002H         SYMBOL        pin15
   C:0CEBH         PUBLIC        pwm_control_Motor
   X:0003H         PUBLIC        _pwm
   D:00D5H         PUBLIC        P1FSRH
-  X:0033H         PUBLIC        asd
-  C:0EA8H         PUBLIC        UART1_Clear
+  C:0EADH         PUBLIC        UART1_Clear
   D:00D4H         PUBLIC        P1FSRL
   D:00DFH         PUBLIC        P12DB
   D:00DEH         PUBLIC        P03DB
-  X:0035H         SYMBOL        _pwm_mask
+  X:0033H         SYMBOL        _pwm_mask
   D:00E6H         PUBLIC        UARTBD
   C:0C83H         PUBLIC        _pwm_setup_control
-  X:0037H         SYMBOL        _pwm_flag_list
-  C:0E95H         PUBLIC        UART_init
+  X:0035H         SYMBOL        _pwm_flag_list
+  C:0E9AH         PUBLIC        UART_init
   D:00E7H         PUBLIC        UARTDR
+  X:003DH         SYMBOL        _COLOR_LOOP_INDEX
   C:0A08H         PUBLIC        setMotorPWM
   C:0ABEH         PUBLIC        _setLedPWM
   C:0DE9H         PUBLIC        port_init
@@ -210,12 +210,12 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   D:00D7H         PUBLIC        P3FSR
   C:0800H         PUBLIC        pwm_control_LED
   X:0042H         SYMBOL        _pwm_ctl_inc_flag
-  C:0E51H         PUBLIC        setupOpMode
+  C:0E76H         PUBLIC        setupOpMode
   -------         PROC          UART1_CLEAR
-  C:0EA8H         LINE#         64
-  C:0EA8H         LINE#         65
-  C:0EA8H         LINE#         66
-  C:0EABH         LINE#         67
+  C:0EADH         LINE#         64
+  C:0EADH         LINE#         65
+  C:0EADH         LINE#         66
+  C:0EB0H         LINE#         67
   -------         ENDPROC       UART1_CLEAR
   -------         PROC          L?0105
   -------         ENDPROC       L?0105
@@ -239,7 +239,7 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   C:0E21H         LINE#         86
   C:0E31H         LINE#         87
   C:0E41H         LINE#         88
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 5
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 5
 
 
   -------         ENDPROC       PWM_INIT
@@ -299,7 +299,7 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   C:0893H         LINE#         152
   C:0893H         LINE#         154
   C:08A1H         LINE#         156
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 6
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 6
 
 
   C:08BCH         LINE#         157
@@ -316,7 +316,7 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   C:0934H         LINE#         178
   C:093BH         LINE#         179
   C:0943H         LINE#         181
-  C:0950H         LINE#         197
+  C:0950H         LINE#         199
   -------         ENDPROC       PWM_CONTROL_LED
   C:0C0EH         SYMBOL        L?0107
   -------         PROC          L?0106
@@ -327,184 +327,184 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   D:0004H         SYMBOL        pwm1
   D:0002H         SYMBOL        pwm2
   X:004EH         SYMBOL        pwm3
-  C:0C13H         LINE#         201
-  C:0C13H         LINE#         202
-  C:0C13H         LINE#         206
-  C:0C2CH         LINE#         207
-  C:0C45H         LINE#         208
-  C:0C5EH         LINE#         209
-  C:0C7DH         LINE#         210
+  C:0C13H         LINE#         203
+  C:0C13H         LINE#         204
+  C:0C13H         LINE#         208
+  C:0C2CH         LINE#         209
+  C:0C45H         LINE#         210
+  C:0C5EH         LINE#         211
+  C:0C7DH         LINE#         212
   -------         ENDPROC       _PWM_ENABLE
   -------         PROC          SETUPOPMODE
-  C:0E51H         LINE#         214
-  C:0E51H         LINE#         215
-  C:0E51H         LINE#         216
-  C:0E5AH         LINE#         217
-  C:0E63H         LINE#         218
-  C:0E6CH         LINE#         219
+  C:0E76H         LINE#         216
+  C:0E76H         LINE#         217
+  C:0E76H         LINE#         218
+  C:0E7FH         LINE#         219
+  C:0E88H         LINE#         220
+  C:0E91H         LINE#         221
   -------         ENDPROC       SETUPOPMODE
   -------         PROC          SETMOTORPWM
-  C:0A08H         LINE#         224
-  C:0A08H         LINE#         225
+  C:0A08H         LINE#         226
   C:0A08H         LINE#         227
-  C:0A0EH         LINE#         228
-  C:0A0EH         LINE#         229
-  C:0A11H         LINE#         230
-  C:0A23H         LINE#         231
-  C:0A26H         LINE#         232
-  C:0A26H         LINE#         233
-  C:0A29H         LINE#         236
-  C:0A29H         LINE#         237
-  C:0A3CH         LINE#         238
-  C:0A3FH         LINE#         240
-  C:0A56H         LINE#         241
-  C:0A6DH         LINE#         242
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 7
+  C:0A08H         LINE#         229
+  C:0A0EH         LINE#         230
+  C:0A0EH         LINE#         231
+  C:0A11H         LINE#         232
+  C:0A23H         LINE#         233
+  C:0A26H         LINE#         234
+  C:0A26H         LINE#         235
+  C:0A29H         LINE#         238
+  C:0A29H         LINE#         239
+  C:0A3CH         LINE#         240
+  C:0A3FH         LINE#         242
+  C:0A56H         LINE#         243
+  C:0A6DH         LINE#         244
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 7
 
 
-  C:0A84H         LINE#         243
-  C:0A9EH         LINE#         244
-  C:0ABAH         LINE#         246
-  C:0ABDH         LINE#         247
+  C:0A84H         LINE#         245
+  C:0A9EH         LINE#         246
+  C:0ABAH         LINE#         248
   C:0ABDH         LINE#         249
+  C:0ABDH         LINE#         251
   -------         ENDPROC       SETMOTORPWM
   -------         PROC          _SETLEDPWM
   X:0046H         SYMBOL        color
-  C:0ABEH         LINE#         251
-  C:0AC6H         LINE#         262
-  C:0AC9H         LINE#         263
-  C:0AD4H         LINE#         264
-  C:0AD4H         LINE#         265
+  C:0ABEH         LINE#         253
+  C:0AC6H         LINE#         264
+  C:0AC9H         LINE#         265
   C:0AD4H         LINE#         266
   C:0AD4H         LINE#         267
   C:0AD4H         LINE#         268
-  C:0AD6H         LINE#         270
-  C:0AE2H         LINE#         271
-  C:0AEEH         LINE#         272
-  C:0AEEH         LINE#         273
+  C:0AD4H         LINE#         269
+  C:0AD4H         LINE#         270
+  C:0AD6H         LINE#         272
+  C:0AE2H         LINE#         273
   C:0AEEH         LINE#         274
   C:0AEEH         LINE#         275
   C:0AEEH         LINE#         276
-  C:0AF0H         LINE#         278
-  C:0AFCH         LINE#         279
-  C:0B0AH         LINE#         280
-  C:0B0DH         LINE#         281
-  C:0B0FH         LINE#         282
-  C:0B0FH         LINE#         283
+  C:0AEEH         LINE#         277
+  C:0AEEH         LINE#         278
+  C:0AF0H         LINE#         280
+  C:0AFCH         LINE#         281
+  C:0B0AH         LINE#         282
+  C:0B0DH         LINE#         283
   C:0B0FH         LINE#         284
-  C:0B11H         LINE#         287
-  C:0B1DH         LINE#         288
-  C:0B2AH         LINE#         289
-  C:0B2DH         LINE#         290
-  C:0B38H         LINE#         291
-  C:0B3AH         LINE#         292
-  C:0B3AH         LINE#         293
-  C:0B3CH         LINE#         295
-  C:0B48H         LINE#         296
-  C:0B57H         LINE#         297
-  C:0B5AH         LINE#         298
-  C:0B65H         LINE#         299
-  C:0B70H         LINE#         300
-  C:0B73H         LINE#         301
-  C:0B73H         LINE#         304
+  C:0B0FH         LINE#         285
+  C:0B0FH         LINE#         286
+  C:0B11H         LINE#         289
+  C:0B1DH         LINE#         290
+  C:0B2AH         LINE#         291
+  C:0B2DH         LINE#         292
+  C:0B38H         LINE#         293
+  C:0B3AH         LINE#         294
+  C:0B3AH         LINE#         295
+  C:0B3CH         LINE#         297
+  C:0B48H         LINE#         298
+  C:0B57H         LINE#         299
+  C:0B5AH         LINE#         300
+  C:0B65H         LINE#         301
+  C:0B70H         LINE#         302
+  C:0B73H         LINE#         303
+  C:0B73H         LINE#         306
   -------         ENDPROC       _SETLEDPWM
   -------         PROC          UART_INIT
-  C:0E95H         LINE#         313
-  C:0E95H         LINE#         314
-  C:0E95H         LINE#         317
-  C:0E98H         LINE#         318
-  C:0E9BH         LINE#         319
-  C:0E9EH         LINE#         320
-  C:0EA1H         LINE#         321
-  C:0EA4H         LINE#         322
-  C:0EA7H         LINE#         324
+  C:0E9AH         LINE#         315
+  C:0E9AH         LINE#         316
+  C:0E9AH         LINE#         319
+  C:0E9DH         LINE#         320
+  C:0EA0H         LINE#         321
+  C:0EA3H         LINE#         322
+  C:0EA6H         LINE#         323
+  C:0EA9H         LINE#         324
+  C:0EACH         LINE#         326
   -------         ENDPROC       UART_INIT
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 8
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 8
 
 
   -------         PROC          CLOCK_INIT
-  C:0EACH         LINE#         328
-  C:0EACH         LINE#         329
-  C:0EACH         LINE#         332
+  C:0EB1H         LINE#         330
+  C:0EB1H         LINE#         331
+  C:0EB1H         LINE#         334
   -------         ENDPROC       CLOCK_INIT
   -------         PROC          PORT_INIT
-  C:0DE9H         LINE#         334
-  C:0DE9H         LINE#         335
-  C:0DE9H         LINE#         345
-  C:0DECH         LINE#         346
-  C:0DEFH         LINE#         347
-  C:0DF1H         LINE#         348
-  C:0DF3H         LINE#         349
-  C:0DF5H         LINE#         351
-  C:0DF8H         LINE#         352
-  C:0DFAH         LINE#         353
-  C:0DFCH         LINE#         354
-  C:0DFEH         LINE#         355
-  C:0E00H         LINE#         357
-  C:0E03H         LINE#         358
-  C:0E05H         LINE#         359
-  C:0E07H         LINE#         360
-  C:0E09H         LINE#         362
-  C:0E0CH         LINE#         363
-  C:0E0EH         LINE#         364
-  C:0E10H         LINE#         365
-  C:0E12H         LINE#         368
-  C:0E14H         LINE#         369
-  C:0E16H         LINE#         370
-  C:0E18H         LINE#         371
-  C:0E1AH         LINE#         372
-  C:0E1DH         LINE#         373
+  C:0DE9H         LINE#         336
+  C:0DE9H         LINE#         337
+  C:0DE9H         LINE#         347
+  C:0DECH         LINE#         348
+  C:0DEFH         LINE#         349
+  C:0DF1H         LINE#         350
+  C:0DF3H         LINE#         351
+  C:0DF5H         LINE#         353
+  C:0DF8H         LINE#         354
+  C:0DFAH         LINE#         355
+  C:0DFCH         LINE#         356
+  C:0DFEH         LINE#         357
+  C:0E00H         LINE#         359
+  C:0E03H         LINE#         360
+  C:0E05H         LINE#         361
+  C:0E07H         LINE#         362
+  C:0E09H         LINE#         364
+  C:0E0CH         LINE#         365
+  C:0E0EH         LINE#         366
+  C:0E10H         LINE#         367
+  C:0E12H         LINE#         370
+  C:0E14H         LINE#         371
+  C:0E16H         LINE#         372
+  C:0E18H         LINE#         373
+  C:0E1AH         LINE#         374
+  C:0E1DH         LINE#         375
   -------         ENDPROC       PORT_INIT
   -------         PROC          MAIN
   -------         DO            
   X:0044H         SYMBOL        i
   -------         ENDDO         
-  C:0951H         LINE#         377
-  C:0951H         LINE#         378
-  C:0951H         LINE#         381
-  C:0954H         LINE#         382
-  C:0957H         LINE#         383
-  C:095AH         LINE#         384
-  C:095DH         LINE#         385
-  C:0971H         LINE#         386
-  C:0974H         LINE#         387
-  C:0977H         LINE#         388
-  C:097AH         LINE#         389
-  C:097DH         LINE#         393
-  C:0980H         LINE#         395
-  C:0983H         LINE#         397
-  C:0983H         LINE#         398
+  C:0951H         LINE#         379
+  C:0951H         LINE#         380
+  C:0951H         LINE#         383
+  C:0954H         LINE#         384
+  C:0957H         LINE#         385
+  C:095AH         LINE#         386
+  C:095DH         LINE#         387
+  C:0971H         LINE#         388
+  C:0974H         LINE#         389
+  C:0977H         LINE#         390
+  C:097AH         LINE#         391
+  C:097DH         LINE#         395
+  C:0980H         LINE#         397
   C:0983H         LINE#         399
-  C:0990H         LINE#         400
-  C:0993H         LINE#         403
-  C:09A4H         LINE#         404
-  C:09A4H         LINE#         405
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 9
+  C:0983H         LINE#         400
+  C:0983H         LINE#         402
+  C:0990H         LINE#         403
+  C:0993H         LINE#         414
+  C:09A4H         LINE#         415
+  C:09A4H         LINE#         416
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  13:08:58  PAGE 9
 
 
-  C:09BCH         LINE#         406
-  C:09BCH         LINE#         407
-  C:09BCH         LINE#         408
-  C:09BFH         LINE#         409
-  C:09C1H         LINE#         410
-  C:09C1H         LINE#         411
-  C:09C5H         LINE#         412
-  C:09C7H         LINE#         413
-  C:09C7H         LINE#         414
-  C:09CBH         LINE#         415
-  C:09CDH         LINE#         416
-  C:09CDH         LINE#         417
-  C:09D1H         LINE#         418
-  C:09D3H         LINE#         419
-  C:09D3H         LINE#         420
-  C:09DAH         LINE#         421
-  C:09DAH         LINE#         423
-  C:09DAH         LINE#         424
-  C:09DAH         LINE#         426
-  C:09F2H         LINE#         427
-  C:09F2H         LINE#         428
-  C:09F5H         LINE#         429
-  C:09F8H         LINE#         430
+  C:09BCH         LINE#         417
+  C:09BCH         LINE#         418
+  C:09BCH         LINE#         419
+  C:09BFH         LINE#         420
+  C:09C1H         LINE#         421
+  C:09C1H         LINE#         422
+  C:09C5H         LINE#         423
+  C:09C7H         LINE#         424
+  C:09C7H         LINE#         425
+  C:09CBH         LINE#         426
+  C:09CDH         LINE#         427
+  C:09CDH         LINE#         428
+  C:09D1H         LINE#         429
+  C:09D3H         LINE#         430
+  C:09D3H         LINE#         431
+  C:09DAH         LINE#         432
+  C:09DAH         LINE#         434
+  C:09DAH         LINE#         435
+  C:09DAH         LINE#         482
+  C:09F2H         LINE#         483
+  C:09F2H         LINE#         484
+  C:09F5H         LINE#         485
+  C:09F8H         LINE#         486
   -------         ENDPROC       MAIN
   -------         ENDMOD        MAIN
 
@@ -517,8 +517,8 @@ SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
   -------         ENDMOD        ?C?ISTOPTR
 
 ******************************************************************************
-* RESTRICTED VERSION WITH 0800H BYTE CODE SIZE LIMIT; USED: 05E3H BYTE (73%) *
+* RESTRICTED VERSION WITH 0800H BYTE CODE SIZE LIMIT; USED: 05E8H BYTE (73%) *
 ******************************************************************************
 
-Program Size: data=9.0 xdata=80 code=1712
+Program Size: data=9.0 xdata=80 code=1717
 LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

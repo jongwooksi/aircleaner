@@ -374,8 +374,8 @@ void port_init()
 	P3FSR = 0x01;   	// P3 selection
 }
 
-int asd;
-
+static unsigned int _COLOR_LOOP_INDEX = 0;
+	
 void main()
 {
 	int i;
@@ -397,11 +397,20 @@ void main()
 	setupOpMode();
 	
 	while(1)
-	{		
+	{	
+		
 		if ((UARTDR & 0x0F) < 0x06)
 			setMotorPWM();		
 
-
+		/*
+		F0 : Motor Power On
+		F1 : Motor Power 1
+		F2 : Motor Power 2
+		F3 : Motor Power 3
+		F4 : Motor Power 4
+		F5 : Motor Power 5 (Max)
+		*/
+		
 		if (((UARTDR & 0xF0) >> 4) < 0x05)
 		{
 			switch ((UARTDR & 0xF0) >> 4)
@@ -425,10 +434,59 @@ void main()
 			}
 		}
 		
+		/*
+		0F : Motor Power On
+		1F : Motor Power 1
+		2F : Motor Power 2
+		3F : Motor Power 3
+		4F : Motor Power 4
+		5F : Motor Power 5 (Max)
+		*/
+		
+		
+		/*
+		for(i = 0; i < 1000; i++) _nop_();	// init delay
+
+		switch (_COLOR_LOOP_INDEX)
+		{
+			case 0:
+				setLedPWM(0);
+				_COLOR_LOOP_INDEX++;
+				break;
+			
+			case 1:
+				setLedPWM(1);
+				_COLOR_LOOP_INDEX++;
+				break;
+			
+			case 2:
+				setLedPWM(2);
+				_COLOR_LOOP_INDEX++;
+				break;
+			
+			case 3:
+				setLedPWM(3);
+				_COLOR_LOOP_INDEX++;
+				break;
+			
+			case 4:
+				setLedPWM(4);
+				_COLOR_LOOP_INDEX++;
+				break;
+					
+		}
+		if (_COLOR_LOOP_INDEX == 4)
+			_COLOR_LOOP_INDEX = 0;
+		*/
+		
 		for (i= 0; i < 10; i++)
 		{
 			pwm_control_Motor();
 			pwm_control_LED();
 		}
+		
+		
+		
+		
 	}
 }

@@ -711,37 +711,37 @@ void ABOVBoard_init()
 void sendDustValue()
 {
   if ( (PM10 >= 0 ) && (PM10 < 30 )) // good
-    ABOVBoard.write((byte)0x10);
+    ABOVBoard.write((byte)0x1F);
   else if ( (PM10 >= 30 ) && (PM10 < 80 )) // soso
-    ABOVBoard.write((byte)0x20);
+    ABOVBoard.write((byte)0x2F);
   else if ( (PM10 >= 80 ) && (PM10 < 150 )) // bad
-    ABOVBoard.write((byte)0x30);
+    ABOVBoard.write((byte)0x3F);
   else if ( PM10 >= 150 ) // very bad
-    ABOVBoard.write((byte)0x40);
+    ABOVBoard.write((byte)0x4F);
   else if ( PM10 == -1 ) // power on
-    ABOVBoard.write((byte)0x00);
+    ABOVBoard.write((byte)0x0F);
   
 }
 void checkAbovPWM()
 {
   
   if (volume == 0)
-    ABOVBoard.write((byte)0x00);
+    ABOVBoard.write((byte)0xF0);
 
   else if (volume == 1)
-    ABOVBoard.write((byte)0x01);
+    ABOVBoard.write((byte)0xF1);
 
   else if (volume == 2)
-    ABOVBoard.write((byte)0x02);
+    ABOVBoard.write((byte)0xF2);
 
   else if (volume == 3)
-    ABOVBoard.write((byte)0x03);
+    ABOVBoard.write((byte)0xF3);
   
   else if (volume == 4)
-    ABOVBoard.write((byte)0x04);
+    ABOVBoard.write((byte)0xF4);
 
   else if (volume == 5)
-    ABOVBoard.write((byte)0x05);
+    ABOVBoard.write((byte)0xF5);
 
 
 

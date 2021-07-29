@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   53          
   54          
   55          // ----------------------------------
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 2   
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 2   
 
   56          static int _pwm_mask = 0x0f;  // Enable Mask : - - - - PWM3 PWM2 PWM1 PWM0
   57          PWMINFO   _pwm[PWM_CH_NUM];
@@ -126,7 +126,7 @@ line level    source
  115   1        // PWM Motor
  116   1        if( _pwm[0].count < _pwm[0].duty && (_pwm_mask & PWM0_FLAG) ) {
  117   2          P3 = 0x20;  // P35
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 3   
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 3   
 
  118   2        }
  119   1      
@@ -190,269 +190,331 @@ line level    source
  177   1        
  178   1        _pwm_out |= 0xF1; // init p10 
  179   1        pin15 = P1 & 0xF0;
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 4   
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 4   
 
  180   1        
  181   1        P1 = ( pin15 | ~_pwm_out);
  182   1      
  183   1        
- 184   1      
- 185   1        /*
- 186   1          ex) pin 13, 12 high, 11 low 00001100
- 187   1               _pwm_out = 0b11111101
- 188   1              ~_pwm_out = 0b00000010
- 189   1              
- 190   1              if P15 low:
- 191   1               P1 = 0b00000010
- 192   1              else (P15 high):
- 193   1               P1 = 0b00100010  
- 194   1        
- 195   1        */
+ 184   1        /*
+ 185   1          ex) pin 13, 12 high, 11 low 00001100
+ 186   1               _pwm_out = 0b11111101
+ 187   1              ~_pwm_out = 0b00000010
+ 188   1              
+ 189   1              if P15 low:
+ 190   1               pin 15 = 0b00100000
+ 191   1               P1     = 0b00100010
+ 192   1        
+ 193   1              else (P15 high):
+ 194   1               pin 15 = 0b00000000
+ 195   1               P1 = 0b00000010  
  196   1        
- 197   1      }
- 198          
- 199          
+ 197   1        */
+ 198   1        
+ 199   1      }
  200          
- 201          void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
- 202          {
- 203   1        // 0:Disable 1:Enable -1:Don't care(not change)
- 204   1      
- 205   1        // B/G/R/Motor
- 206   1        if( pwm0 != -1 ) { if( pwm0 ) _pwm_mask |= PWM0_FLAG; else _pwm_mask &= ~PWM0_FLAG; }
- 207   1        if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
- 208   1        if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
- 209   1        if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
- 210   1      }
- 211          
- 212          
- 213          //======================================================
- 214          void setupOpMode()
- 215          {
- 216   1        pwm_setup_control( PWM0_FLAG, PWM_CTL_OFF );
- 217   1        pwm_setup_control( PWM1_FLAG, PWM_CTL_OFF );
- 218   1        pwm_setup_control( PWM2_FLAG, PWM_CTL_OFF );
- 219   1        pwm_setup_control( PWM3_FLAG, PWM_CTL_OFF );
- 220   1      
- 221   1      }
- 222          
- 223          
- 224          void setMotorPWM()
- 225          { 
- 226   1      
- 227   1        if((UARTDR & 0x0F)== 0x00)
- 228   1        {
- 229   2          P1 &= 0x0F;
- 230   2          pwm_enable(0, -1, -1, -1);
- 231   2          pwm_setup( &_pwm[0], 10, 0 );
- 232   2          UART1_Clear();
- 233   2        }
- 234   1        
- 235   1        else
- 236   1        {
- 237   2          pwm_enable( 1, -1,-1,-1 );
- 238   2          P1 |= 0x20;
- 239   2      
- 240   2          if((UARTDR & 0x0F) == 0x01) { pwm_setup( &_pwm[0], 10, 6 );}
- 241   2          else if((UARTDR & 0x0F) == 0x02) { pwm_setup( &_pwm[0], 10, 7 );}
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 5   
+ 201          
+ 202          
+ 203          void pwm_enable( int pwm0, int pwm1, int pwm2, int pwm3 )
+ 204          {
+ 205   1        // 0:Disable 1:Enable -1:Don't care(not change)
+ 206   1      
+ 207   1        // B/G/R/Motor
+ 208   1        if( pwm0 != -1 ) { if( pwm0 ) _pwm_mask |= PWM0_FLAG; else _pwm_mask &= ~PWM0_FLAG; }
+ 209   1        if( pwm1 != -1 ) { if( pwm1 ) _pwm_mask |= PWM1_FLAG; else _pwm_mask &= ~PWM1_FLAG; }
+ 210   1        if( pwm2 != -1 ) { if( pwm2 ) _pwm_mask |= PWM2_FLAG; else _pwm_mask &= ~PWM2_FLAG; }
+ 211   1        if( pwm3 != -1 ) { if( pwm3 ) _pwm_mask |= PWM3_FLAG; else _pwm_mask &= ~PWM3_FLAG; }
+ 212   1      }
+ 213          
+ 214          
+ 215          //======================================================
+ 216          void setupOpMode()
+ 217          {
+ 218   1        pwm_setup_control( PWM0_FLAG, PWM_CTL_OFF );
+ 219   1        pwm_setup_control( PWM1_FLAG, PWM_CTL_OFF );
+ 220   1        pwm_setup_control( PWM2_FLAG, PWM_CTL_OFF );
+ 221   1        pwm_setup_control( PWM3_FLAG, PWM_CTL_OFF );
+ 222   1      
+ 223   1      }
+ 224          
+ 225          
+ 226          void setMotorPWM()
+ 227          { 
+ 228   1      
+ 229   1        if((UARTDR & 0x0F)== 0x00)
+ 230   1        {
+ 231   2          P1 &= 0x0F;
+ 232   2          pwm_enable(0, -1, -1, -1);
+ 233   2          pwm_setup( &_pwm[0], 10, 0 );
+ 234   2          UART1_Clear();
+ 235   2        }
+ 236   1        
+ 237   1        else
+ 238   1        {
+ 239   2          pwm_enable( 1, -1,-1,-1 );
+ 240   2          P1 |= 0x20;
+ 241   2      
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 5   
 
- 242   2          else if((UARTDR & 0x0F) == 0x03) { pwm_setup( &_pwm[0], 10, 8 );}
- 243   2          else if((UARTDR & 0x0F) == 0x04) { pwm_setup( &_pwm[0], 10, 9 );}
- 244   2          else if((UARTDR & 0x0F) == 0x05) { pwm_setup( &_pwm[0], 10, 10 );}
- 245   2      
- 246   2          UART1_Clear();
- 247   2        }
- 248   1        
- 249   1      }
- 250          
- 251          void setLedPWM(int color) { 
- 252   1        
- 253   1        /* 
- 254   1          B : On
- 255   1          G : Good
- 256   1          Y : So So
- 257   1          M : Bad
- 258   1          R : very Bad
- 259   1        
- 260   1        */
- 261   1      
- 262   1        if(color == 0){ // B : on
- 263   2          pwm_enable(-1, 1, 1, 0);
- 264   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
- 265   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
- 266   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_INC );
- 267   2          UART1_Clear();
- 268   2        }
- 269   1        
- 270   1        else if(color == 1){ // G : Good
- 271   2          pwm_enable(-1, 1, 0, 1);
- 272   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
- 273   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_INC );
- 274   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
- 275   2          UART1_Clear();
- 276   2        }
- 277   1          
- 278   1        else if(color == 2){ // Y : So So
- 279   2          pwm_enable(-1, 0, 0, 1);
- 280   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
- 281   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_INC );
- 282   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
- 283   2          UART1_Clear();
- 284   2        }
- 285   1      
- 286   1        
- 287   1        else if(color == 3){ // M : Bad
- 288   2          pwm_enable(-1, 0, 1, 0);
- 289   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
- 290   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
- 291   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_INC );
- 292   2          UART1_Clear();
- 293   2        }
- 294   1      
- 295   1        else if(color == 4){ // R : very Bad
- 296   2          pwm_enable(-1, 0, 1, 1);
- 297   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
- 298   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
- 299   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
- 300   2          UART1_Clear();
- 301   2        }
- 302   1      
- 303   1        
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 6   
+ 242   2          if((UARTDR & 0x0F) == 0x01) { pwm_setup( &_pwm[0], 10, 6 );}
+ 243   2          else if((UARTDR & 0x0F) == 0x02) { pwm_setup( &_pwm[0], 10, 7 );}
+ 244   2          else if((UARTDR & 0x0F) == 0x03) { pwm_setup( &_pwm[0], 10, 8 );}
+ 245   2          else if((UARTDR & 0x0F) == 0x04) { pwm_setup( &_pwm[0], 10, 9 );}
+ 246   2          else if((UARTDR & 0x0F) == 0x05) { pwm_setup( &_pwm[0], 10, 10 );}
+ 247   2      
+ 248   2          UART1_Clear();
+ 249   2        }
+ 250   1        
+ 251   1      }
+ 252          
+ 253          void setLedPWM(int color) { 
+ 254   1        
+ 255   1        /* 
+ 256   1          B : On
+ 257   1          G : Good
+ 258   1          Y : So So
+ 259   1          M : Bad
+ 260   1          R : very Bad
+ 261   1        
+ 262   1        */
+ 263   1      
+ 264   1        if(color == 0){ // B : on
+ 265   2          pwm_enable(-1, 1, 1, 0);
+ 266   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
+ 267   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
+ 268   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_INC );
+ 269   2          UART1_Clear();
+ 270   2        }
+ 271   1        
+ 272   1        else if(color == 1){ // G : Good
+ 273   2          pwm_enable(-1, 1, 0, 1);
+ 274   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
+ 275   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_INC );
+ 276   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
+ 277   2          UART1_Clear();
+ 278   2        }
+ 279   1          
+ 280   1        else if(color == 2){ // Y : So So
+ 281   2          pwm_enable(-1, 0, 0, 1);
+ 282   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
+ 283   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_INC );
+ 284   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
+ 285   2          UART1_Clear();
+ 286   2        }
+ 287   1      
+ 288   1        
+ 289   1        else if(color == 3){ // M : Bad
+ 290   2          pwm_enable(-1, 0, 1, 0);
+ 291   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
+ 292   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
+ 293   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_INC );
+ 294   2          UART1_Clear();
+ 295   2        }
+ 296   1      
+ 297   1        else if(color == 4){ // R : very Bad
+ 298   2          pwm_enable(-1, 0, 1, 1);
+ 299   2          pwm_setup_control( PWM1_FLAG, PWM_CTL_INC );
+ 300   2          pwm_setup_control( PWM2_FLAG, PWM_CTL_DEC );
+ 301   2          pwm_setup_control( PWM3_FLAG, PWM_CTL_DEC );
+ 302   2          UART1_Clear();
+ 303   2        }
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 6   
 
- 304   1      }
- 305          
- 306          /*
- 307          void setRelayCtrl(int color) {
- 308            
- 309          }
- 310          
- 311          */
+ 304   1      
+ 305   1        
+ 306   1      }
+ 307          
+ 308          /*
+ 309          void setRelayCtrl(int color) {
+ 310            
+ 311          }
  312          
- 313          void UART_init()
- 314          {
- 315   1        // initialize UART interface
- 316   1        // ASync. 9615bps N 8 1
- 317   1        UARTCR2 = 0x02;   // activate UART
- 318   1        UARTCR1 = 0x06;   // bit count, parity
- 319   1        UARTCR2 |= 0x0D;  // interrupt, speed
- 320   1        UARTCR3 = 0x00;   // stop bit
- 321   1        UARTBD = 0x0C;    // baud rate
- 322   1        UARTST=0x60;    //UDRE TXC RXC WAKE SOFTRST DOR FE PE 
- 323   1        // 0x40
- 324   1      }
- 325          
- 326          
+ 313          */
+ 314          
+ 315          void UART_init()
+ 316          {
+ 317   1        // initialize UART interface
+ 318   1        // ASync. 9615bps N 8 1
+ 319   1        UARTCR2 = 0x02;   // activate UART
+ 320   1        UARTCR1 = 0x06;   // bit count, parity
+ 321   1        UARTCR2 |= 0x0D;  // interrupt, speed
+ 322   1        UARTCR3 = 0x00;   // stop bit
+ 323   1        UARTBD = 0x0C;    // baud rate
+ 324   1        UARTST=0x60;    //UDRE TXC RXC WAKE SOFTRST DOR FE PE 
+ 325   1        // 0x40
+ 326   1      }
  327          
- 328          void clock_init()
- 329          {
- 330   1        // internal RC clock (1.000000MHz)
- 331   1        // Nothing to do for the default clock
- 332   1      }
- 333          
- 334          void port_init()
- 335          {
- 336   1        // initialize ports
- 337   1        //   4 : P35      out 
- 338   1        //   8 : RXD      in  
- 339   1        //   9 : TXD      out 
- 340   1        //  10 : P25      in  
- 341   1        //  11 : P24      out 
- 342   1        //  20 : P13      out 
- 343   1        //  21 : P12      out 
- 344   1        //  22 : P11      out 
- 345   1        P0IO = 0xFF;      // direction
- 346   1        P0PU = 0x00;      // pullup
- 347   1        P0OD = 0x00;      // open drain
- 348   1        P03DB = 0x00;     // bit7~6(debounce clock), bit5~0=P35,P06~02 debounce
- 349   1        P0   = 0x00;      // port initial value
- 350   1      
- 351   1        P1IO = 0xFF;      // direction
- 352   1        P1PU = 0x00;      // pullup
- 353   1        P1OD = 0x00;      // open drain
- 354   1        P12DB = 0x00;     // debounce : P23~20, P13~10
- 355   1        P1   = 0x00;      // port initial value
- 356   1      
- 357   1        P2IO = 0xDF;      // direction
- 358   1        P2PU = 0x00;      // pullup
- 359   1        P2OD = 0x00;      // open drain
- 360   1        P2   = 0x00;      // port initial value
- 361   1      
- 362   1        P3IO = 0xFD;      // direction
- 363   1        P3PU = 0x00;      // pullup
- 364   1        P3OD = 0x00;      // open drain
- 365   1        P3   = 0x00;      // port initial value
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 7   
+ 328          
+ 329          
+ 330          void clock_init()
+ 331          {
+ 332   1        // internal RC clock (1.000000MHz)
+ 333   1        // Nothing to do for the default clock
+ 334   1      }
+ 335          
+ 336          void port_init()
+ 337          {
+ 338   1        // initialize ports
+ 339   1        //   4 : P35      out 
+ 340   1        //   8 : RXD      in  
+ 341   1        //   9 : TXD      out 
+ 342   1        //  10 : P25      in  
+ 343   1        //  11 : P24      out 
+ 344   1        //  20 : P13      out 
+ 345   1        //  21 : P12      out 
+ 346   1        //  22 : P11      out 
+ 347   1        P0IO = 0xFF;      // direction
+ 348   1        P0PU = 0x00;      // pullup
+ 349   1        P0OD = 0x00;      // open drain
+ 350   1        P03DB = 0x00;     // bit7~6(debounce clock), bit5~0=P35,P06~02 debounce
+ 351   1        P0   = 0x00;      // port initial value
+ 352   1      
+ 353   1        P1IO = 0xFF;      // direction
+ 354   1        P1PU = 0x00;      // pullup
+ 355   1        P1OD = 0x00;      // open drain
+ 356   1        P12DB = 0x00;     // debounce : P23~20, P13~10
+ 357   1        P1   = 0x00;      // port initial value
+ 358   1      
+ 359   1        P2IO = 0xDF;      // direction
+ 360   1        P2PU = 0x00;      // pullup
+ 361   1        P2OD = 0x00;      // open drain
+ 362   1        P2   = 0x00;      // port initial value
+ 363   1      
+ 364   1        P3IO = 0xFD;      // direction
+ 365   1        P3PU = 0x00;      // pullup
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 7   
 
- 366   1      
- 367   1        // Set port functions
- 368   1        P0FSR = 0x00;     // P0 selection
- 369   1        P1FSRH = 0x00;    // P1 selection High
- 370   1        P1FSRL = 0x00;    // P1 selection Low
- 371   1        P2FSR = 0x00;     // P2 selection
- 372   1        P3FSR = 0x01;     // P3 selection
- 373   1      }
- 374          
- 375          int asd;
+ 366   1        P3OD = 0x00;      // open drain
+ 367   1        P3   = 0x00;      // port initial value
+ 368   1      
+ 369   1        // Set port functions
+ 370   1        P0FSR = 0x00;     // P0 selection
+ 371   1        P1FSRH = 0x00;    // P1 selection High
+ 372   1        P1FSRL = 0x00;    // P1 selection Low
+ 373   1        P2FSR = 0x00;     // P2 selection
+ 374   1        P3FSR = 0x01;     // P3 selection
+ 375   1      }
  376          
- 377          void main()
- 378          {
- 379   1        int i;
- 380   1        
- 381   1        cli();            // disable INT. during peripheral setting
- 382   1        port_init();      // initialize ports
- 383   1        clock_init();     // initialize operation clock
- 384   1        UART_init();      // initialize UART interface
- 385   1        pwm_enable( 0, 1, 1, 1 ); // Motor/ R/ G/ B 
- 386   1        pwm_init();
- 387   1        pwm_control_Motor();
- 388   1        pwm_control_LED();
- 389   1        sei();            // enable INT.
- 390   1      
- 391   1      
- 392   1        // TODO: add your main code here
- 393   1        UARTDR = 0xFF;
- 394   1        
- 395   1        setupOpMode();
+ 377          static unsigned int _COLOR_LOOP_INDEX = 0;
+ 378            
+ 379          void main()
+ 380          {
+ 381   1        int i;
+ 382   1        
+ 383   1        cli();            // disable INT. during peripheral setting
+ 384   1        port_init();      // initialize ports
+ 385   1        clock_init();     // initialize operation clock
+ 386   1        UART_init();      // initialize UART interface
+ 387   1        pwm_enable( 0, 1, 1, 1 ); // Motor/ R/ G/ B 
+ 388   1        pwm_init();
+ 389   1        pwm_control_Motor();
+ 390   1        pwm_control_LED();
+ 391   1        sei();            // enable INT.
+ 392   1      
+ 393   1      
+ 394   1        // TODO: add your main code here
+ 395   1        UARTDR = 0xFF;
  396   1        
- 397   1        while(1)
- 398   1        {   
- 399   2          if ((UARTDR & 0x0F) < 0x06)
- 400   2            setMotorPWM();    
- 401   2      
- 402   2      
- 403   2          if (((UARTDR & 0xF0) >> 4) < 0x05)
- 404   2          {
- 405   3            switch ((UARTDR & 0xF0) >> 4)
- 406   3              {
- 407   4              case 0x00: 
- 408   4                setLedPWM(0); 
- 409   4                break;
- 410   4              case 0x01: 
- 411   4                setLedPWM(1);
- 412   4                break;
- 413   4              case 0x02: 
- 414   4                setLedPWM(2);
- 415   4                break;
- 416   4              case 0x03: 
- 417   4                setLedPWM(3);
- 418   4                break;
- 419   4              case 0x04:
- 420   4                setLedPWM(4);
- 421   4                break;
- 422   4      
- 423   4            }
- 424   3          }
- 425   2          
- 426   2          for (i= 0; i < 10; i++)
- 427   2          {
-C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 11:01:12 PAGE 8   
+ 397   1        setupOpMode();
+ 398   1        
+ 399   1        while(1)
+ 400   1        { 
+ 401   2          
+ 402   2          if ((UARTDR & 0x0F) < 0x06)
+ 403   2            setMotorPWM();    
+ 404   2      
+ 405   2          /*
+ 406   2          F0 : Motor Power On
+ 407   2          F1 : Motor Power 1
+ 408   2          F2 : Motor Power 2
+ 409   2          F3 : Motor Power 3
+ 410   2          F4 : Motor Power 4
+ 411   2          F5 : Motor Power 5 (Max)
+ 412   2          */
+ 413   2          
+ 414   2          if (((UARTDR & 0xF0) >> 4) < 0x05)
+ 415   2          {
+ 416   3            switch ((UARTDR & 0xF0) >> 4)
+ 417   3              {
+ 418   4              case 0x00: 
+ 419   4                setLedPWM(0); 
+ 420   4                break;
+ 421   4              case 0x01: 
+ 422   4                setLedPWM(1);
+ 423   4                break;
+ 424   4              case 0x02: 
+ 425   4                setLedPWM(2);
+ 426   4                break;
+ 427   4              case 0x03: 
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 8   
 
- 428   3            pwm_control_Motor();
- 429   3            pwm_control_LED();
- 430   3          }
- 431   2        }
- 432   1      }
+ 428   4                setLedPWM(3);
+ 429   4                break;
+ 430   4              case 0x04:
+ 431   4                setLedPWM(4);
+ 432   4                break;
+ 433   4      
+ 434   4            }
+ 435   3          }
+ 436   2          
+ 437   2          /*
+ 438   2          0F : Motor Power On
+ 439   2          1F : Motor Power 1
+ 440   2          2F : Motor Power 2
+ 441   2          3F : Motor Power 3
+ 442   2          4F : Motor Power 4
+ 443   2          5F : Motor Power 5 (Max)
+ 444   2          */
+ 445   2          
+ 446   2          
+ 447   2          /*
+ 448   2          for(i = 0; i < 1000; i++) _nop_();  // init delay
+ 449   2      
+ 450   2          switch (_COLOR_LOOP_INDEX)
+ 451   2          {
+ 452   2            case 0:
+ 453   2              setLedPWM(0);
+ 454   2              _COLOR_LOOP_INDEX++;
+ 455   2              break;
+ 456   2            
+ 457   2            case 1:
+ 458   2              setLedPWM(1);
+ 459   2              _COLOR_LOOP_INDEX++;
+ 460   2              break;
+ 461   2            
+ 462   2            case 2:
+ 463   2              setLedPWM(2);
+ 464   2              _COLOR_LOOP_INDEX++;
+ 465   2              break;
+ 466   2            
+ 467   2            case 3:
+ 468   2              setLedPWM(3);
+ 469   2              _COLOR_LOOP_INDEX++;
+ 470   2              break;
+ 471   2            
+ 472   2            case 4:
+ 473   2              setLedPWM(4);
+ 474   2              _COLOR_LOOP_INDEX++;
+ 475   2              break;
+ 476   2                
+ 477   2          }
+ 478   2          if (_COLOR_LOOP_INDEX == 4)
+ 479   2            _COLOR_LOOP_INDEX = 0;
+ 480   2          */
+ 481   2          
+ 482   2          for (i= 0; i < 10; i++)
+ 483   2          {
+ 484   3            pwm_control_Motor();
+ 485   3            pwm_control_LED();
+ 486   3          }
+ 487   2          
+ 488   2          
+ 489   2          
+C51 COMPILER V9.60.0.0   MAIN                                                              07/29/2021 13:08:58 PAGE 9   
+
+ 490   2          
+ 491   2        }
+ 492   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
