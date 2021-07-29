@@ -1,0 +1,524 @@
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    07/29/2021  11:01:12  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22.2.0, INVOKED BY:
+C:\KEIL_V5\C51\BIN\BL51.EXE startup.obj, main.obj TO MC96F8316 RAMSIZE (256) CODE (0X0000-0X3FFF) XDATA (0X0000-0X01FF)
+
+
+MEMORY MODEL: LARGE
+
+
+INPUT MODULES INCLUDED:
+  startup.obj (?C_STARTUP)
+  main.obj (MAIN)
+  C:\KEIL_V5\C51\LIB\C51L.LIB (?C_INIT)
+  C:\KEIL_V5\C51\LIB\C51L.LIB (?C?ISTPTR)
+  C:\KEIL_V5\C51\LIB\C51L.LIB (?C?ISTOPTR)
+
+
+LINK MAP OF MODULE:  MC96F8316 (?C_STARTUP)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            IDATA   0008H     0001H     UNIT         ?STACK
+
+            * * * * * * *  X D A T A   M E M O R Y  * * * * * * *
+            XDATA   0000H     0044H     UNIT         ?XD?MAIN
+            XDATA   0044H     000CH     UNIT         _XDATA_GROUP_
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+                    0003H     07FDH                  *** GAP ***
+            CODE    0800H     0151H     UNIT         ?PR?PWM_CONTROL_LED?MAIN
+            CODE    0951H     00B7H     UNIT         ?PR?MAIN?MAIN
+            CODE    0A08H     00B6H     UNIT         ?PR?SETMOTORPWM?MAIN
+            CODE    0ABEH     00B6H     UNIT         ?PR?_SETLEDPWM?MAIN
+            CODE    0B74H     009AH     UNIT         ?C_C51STARTUP
+            CODE    0C0EH     0070H     UNIT         ?PR?_PWM_ENABLE?MAIN
+            CODE    0C7EH     006DH     UNIT         ?PR?_PWM_SETUP_CONTROL?MAIN
+            CODE    0CEBH     0065H     UNIT         ?PR?PWM_CONTROL_MOTOR?MAIN
+            CODE    0D50H     004DH     UNIT         ?PR?_PWM_SETUP?MAIN
+            CODE    0D9DH     004CH     UNIT         ?C?LIB_CODE
+            CODE    0DE9H     0035H     UNIT         ?PR?PORT_INIT?MAIN
+            CODE    0E1EH     0033H     UNIT         ?PR?PWM_INIT?MAIN
+            CODE    0E51H     0024H     UNIT         ?PR?SETUPOPMODE?MAIN
+            CODE    0E75H     0020H     UNIT         ?C_INITSEG
+            CODE    0E95H     0013H     UNIT         ?PR?UART_INIT?MAIN
+            CODE    0EA8H     0004H     UNIT         ?PR?UART1_CLEAR?MAIN
+            CODE    0EACH     0001H     UNIT         ?PR?CLOCK_INIT?MAIN
+
+
+
+OVERLAY MAP OF MODULE:   MC96F8316 (?C_STARTUP)
+
+
+SEGMENT                               XDATA_GROUP
+  +--> CALLED SEGMENT               START    LENGTH
+---------------------------------------------------
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 2
+
+
+?C_C51STARTUP                       -----    -----
+  +--> ?PR?MAIN?MAIN
+  +--> ?C_INITSEG
+
+?PR?MAIN?MAIN                       0044H    0002H
+  +--> ?PR?PORT_INIT?MAIN
+  +--> ?PR?CLOCK_INIT?MAIN
+  +--> ?PR?UART_INIT?MAIN
+  +--> ?PR?_PWM_ENABLE?MAIN
+  +--> ?PR?PWM_INIT?MAIN
+  +--> ?PR?PWM_CONTROL_MOTOR?MAIN
+  +--> ?PR?PWM_CONTROL_LED?MAIN
+  +--> ?PR?SETUPOPMODE?MAIN
+  +--> ?PR?SETMOTORPWM?MAIN
+  +--> ?PR?_SETLEDPWM?MAIN
+
+?PR?_PWM_ENABLE?MAIN                0048H    0008H
+
+?PR?PWM_INIT?MAIN                   -----    -----
+  +--> ?PR?_PWM_SETUP?MAIN
+
+?PR?_PWM_SETUP?MAIN                 0046H    0007H
+
+?PR?SETUPOPMODE?MAIN                -----    -----
+  +--> ?PR?_PWM_SETUP_CONTROL?MAIN
+
+?PR?_PWM_SETUP_CONTROL?MAIN         0048H    0002H
+
+?PR?SETMOTORPWM?MAIN                -----    -----
+  +--> ?PR?_PWM_ENABLE?MAIN
+  +--> ?PR?_PWM_SETUP?MAIN
+  +--> ?PR?UART1_CLEAR?MAIN
+
+?PR?_SETLEDPWM?MAIN                 0046H    0002H
+  +--> ?PR?_PWM_ENABLE?MAIN
+  +--> ?PR?_PWM_SETUP_CONTROL?MAIN
+  +--> ?PR?UART1_CLEAR?MAIN
+
+
+
+SYMBOL TABLE OF MODULE:  MC96F8316 (?C_STARTUP)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        ?C_STARTUP
+  C:0B74H         SEGMENT       ?C_C51STARTUP
+  I:0008H         SEGMENT       ?STACK
+  C:0000H         PUBLIC        ?C_STARTUP
+  D:00E0H         SYMBOL        ACC
+  D:00F0H         SYMBOL        B
+  D:0083H         SYMBOL        DPH
+  D:0082H         SYMBOL        DPL
+  N:0000H         SYMBOL        IBPSTACK
+  N:0100H         SYMBOL        IBPSTACKTOP
+  N:0100H         SYMBOL        IDATALEN
+  C:0B77H         SYMBOL        IDATALOOP
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 3
+
+
+  N:0000H         SYMBOL        PBPSTACK
+  N:0000H         SYMBOL        PBPSTACKTOP
+  N:0000H         SYMBOL        PDATALEN
+  N:0000H         SYMBOL        PDATASTART
+  N:0000H         SYMBOL        PPAGE
+  N:0000H         SYMBOL        PPAGEENABLE
+  D:00A0H         SYMBOL        PPAGE_SFR
+  D:0081H         SYMBOL        SP
+  C:0B74H         SYMBOL        STARTUP1
+  N:0000H         SYMBOL        XBPSTACK
+  N:0000H         SYMBOL        XBPSTACKTOP
+  N:0200H         SYMBOL        XDATALEN
+  C:0B82H         SYMBOL        XDATALOOP
+  N:0000H         SYMBOL        XDATASTART
+  C:0000H         LINE#         94
+  C:0B74H         LINE#         101
+  C:0B76H         LINE#         102
+  C:0B77H         LINE#         103
+  C:0B78H         LINE#         104
+  C:0B7AH         LINE#         108
+  C:0B7DH         LINE#         109
+  C:0B7FH         LINE#         113
+  C:0B81H         LINE#         115
+  C:0B82H         LINE#         116
+  C:0B83H         LINE#         117
+  C:0B84H         LINE#         118
+  C:0B86H         LINE#         119
+  C:0B88H         LINE#         153
+  C:0B8BH         LINE#         157
+  -------         ENDMOD        ?C_STARTUP
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0088H         PUBLIC        P1
+  X:0000H         SYMBOL        _pwm_ctl_cnt
+  D:0090H         PUBLIC        P2
+  D:0098H         PUBLIC        P3
+  D:00E2H         PUBLIC        UARTCR1
+  D:00E3H         PUBLIC        UARTCR2
+  D:00E4H         PUBLIC        UARTCR3
+  D:00A8H         PUBLIC        IE
+  D:0091H         PUBLIC        P0OD
+  D:0092H         PUBLIC        P1OD
+  D:0093H         PUBLIC        P2OD
+  D:0094H         PUBLIC        P3OD
+  D:00A1H         PUBLIC        P0IO
+  D:00B1H         PUBLIC        P1IO
+  D:00B9H         PUBLIC        P2IO
+  D:00C1H         PUBLIC        P3IO
+  C:0C13H         PUBLIC        _pwm_enable
+  C:0EACH         PUBLIC        clock_init
+  D:00ACH         PUBLIC        P0PU
+  C:0951H         PUBLIC        main
+  D:00ADH         PUBLIC        P1PU
+  D:00AEH         PUBLIC        P2PU
+  D:00AFH         PUBLIC        P3PU
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 4
+
+
+  X:0002H         SYMBOL        pin15
+  C:0CEBH         PUBLIC        pwm_control_Motor
+  X:0003H         PUBLIC        _pwm
+  D:00D5H         PUBLIC        P1FSRH
+  X:0033H         PUBLIC        asd
+  C:0EA8H         PUBLIC        UART1_Clear
+  D:00D4H         PUBLIC        P1FSRL
+  D:00DFH         PUBLIC        P12DB
+  D:00DEH         PUBLIC        P03DB
+  X:0035H         SYMBOL        _pwm_mask
+  D:00E6H         PUBLIC        UARTBD
+  C:0C83H         PUBLIC        _pwm_setup_control
+  X:0037H         SYMBOL        _pwm_flag_list
+  C:0E95H         PUBLIC        UART_init
+  D:00E7H         PUBLIC        UARTDR
+  C:0A08H         PUBLIC        setMotorPWM
+  C:0ABEH         PUBLIC        _setLedPWM
+  C:0DE9H         PUBLIC        port_init
+  X:003FH         SYMBOL        _pwm_ctl_dec_flag
+  D:00E5H         PUBLIC        UARTST
+  C:0D60H         PUBLIC        _pwm_setup
+  C:0E1EH         PUBLIC        pwm_init
+  D:00D3H         PUBLIC        P0FSR
+  D:00D6H         PUBLIC        P2FSR
+  X:0041H         SYMBOL        _pwm_out
+  D:00D7H         PUBLIC        P3FSR
+  C:0800H         PUBLIC        pwm_control_LED
+  X:0042H         SYMBOL        _pwm_ctl_inc_flag
+  C:0E51H         PUBLIC        setupOpMode
+  -------         PROC          UART1_CLEAR
+  C:0EA8H         LINE#         64
+  C:0EA8H         LINE#         65
+  C:0EA8H         LINE#         66
+  C:0EABH         LINE#         67
+  -------         ENDPROC       UART1_CLEAR
+  -------         PROC          L?0105
+  -------         ENDPROC       L?0105
+  -------         PROC          _PWM_SETUP
+  D:0001H         SYMBOL        pwm
+  D:0004H         SYMBOL        period
+  X:004BH         SYMBOL        duty
+  C:0D60H         LINE#         71
+  C:0D60H         LINE#         72
+  C:0D60H         LINE#         73
+  C:0D68H         LINE#         74
+  C:0D79H         LINE#         75
+  C:0D82H         LINE#         76
+  C:0D8BH         LINE#         77
+  C:0D94H         LINE#         78
+  -------         ENDPROC       _PWM_SETUP
+  -------         PROC          PWM_INIT
+  C:0E1EH         LINE#         82
+  C:0E1EH         LINE#         83
+  C:0E1EH         LINE#         85
+  C:0E21H         LINE#         86
+  C:0E31H         LINE#         87
+  C:0E41H         LINE#         88
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 5
+
+
+  -------         ENDPROC       PWM_INIT
+  C:0C7EH         SYMBOL        L?0109
+  -------         PROC          L?0108
+  -------         ENDPROC       L?0108
+  C:0C7EH         SYMBOL        L?0109
+  -------         PROC          _PWM_SETUP_CONTROL
+  D:0006H         SYMBOL        pwmflag
+  X:0048H         SYMBOL        ctl
+  C:0C83H         LINE#         92
+  C:0C8BH         LINE#         93
+  C:0C8BH         LINE#         94
+  C:0C8EH         LINE#         95
+  C:0C8EH         LINE#         96
+  C:0C9EH         LINE#         97
+  C:0CA8H         LINE#         98
+  C:0CA9H         LINE#         99
+  C:0CB5H         LINE#         100
+  C:0CB5H         LINE#         101
+  C:0CBFH         LINE#         102
+  C:0CCFH         LINE#         103
+  C:0CD0H         LINE#         105
+  C:0CD0H         LINE#         106
+  C:0CE0H         LINE#         107
+  C:0CEAH         LINE#         108
+  C:0CEAH         LINE#         109
+  -------         ENDPROC       _PWM_SETUP_CONTROL
+  -------         PROC          PWM_CONTROL_MOTOR
+  C:0CEBH         LINE#         113
+  C:0CEBH         LINE#         114
+  C:0CEBH         LINE#         116
+  C:0D0DH         LINE#         117
+  C:0D10H         LINE#         118
+  C:0D10H         LINE#         120
+  C:0D1EH         LINE#         123
+  C:0D39H         LINE#         124
+  C:0D3DH         LINE#         125
+  C:0D4CH         LINE#         126
+  C:0D4FH         LINE#         127
+  C:0D4FH         LINE#         128
+  -------         ENDPROC       PWM_CONTROL_MOTOR
+  -------         PROC          PWM_CONTROL_LED
+  C:0800H         LINE#         131
+  C:0800H         LINE#         132
+  C:0800H         LINE#         134
+  C:0805H         LINE#         137
+  C:0827H         LINE#         138
+  C:082EH         LINE#         139
+  C:082EH         LINE#         141
+  C:083CH         LINE#         143
+  C:0857H         LINE#         144
+  C:085BH         LINE#         145
+  C:086AH         LINE#         146
+  C:086AH         LINE#         150
+  C:088CH         LINE#         151
+  C:0893H         LINE#         152
+  C:0893H         LINE#         154
+  C:08A1H         LINE#         156
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 6
+
+
+  C:08BCH         LINE#         157
+  C:08C0H         LINE#         158
+  C:08CFH         LINE#         159
+  C:08CFH         LINE#         163
+  C:08F1H         LINE#         164
+  C:08F8H         LINE#         165
+  C:08F8H         LINE#         167
+  C:0906H         LINE#         170
+  C:0921H         LINE#         171
+  C:0925H         LINE#         172
+  C:0934H         LINE#         173
+  C:0934H         LINE#         178
+  C:093BH         LINE#         179
+  C:0943H         LINE#         181
+  C:0950H         LINE#         197
+  -------         ENDPROC       PWM_CONTROL_LED
+  C:0C0EH         SYMBOL        L?0107
+  -------         PROC          L?0106
+  -------         ENDPROC       L?0106
+  C:0C0EH         SYMBOL        L?0107
+  -------         PROC          _PWM_ENABLE
+  D:0006H         SYMBOL        pwm0
+  D:0004H         SYMBOL        pwm1
+  D:0002H         SYMBOL        pwm2
+  X:004EH         SYMBOL        pwm3
+  C:0C13H         LINE#         201
+  C:0C13H         LINE#         202
+  C:0C13H         LINE#         206
+  C:0C2CH         LINE#         207
+  C:0C45H         LINE#         208
+  C:0C5EH         LINE#         209
+  C:0C7DH         LINE#         210
+  -------         ENDPROC       _PWM_ENABLE
+  -------         PROC          SETUPOPMODE
+  C:0E51H         LINE#         214
+  C:0E51H         LINE#         215
+  C:0E51H         LINE#         216
+  C:0E5AH         LINE#         217
+  C:0E63H         LINE#         218
+  C:0E6CH         LINE#         219
+  -------         ENDPROC       SETUPOPMODE
+  -------         PROC          SETMOTORPWM
+  C:0A08H         LINE#         224
+  C:0A08H         LINE#         225
+  C:0A08H         LINE#         227
+  C:0A0EH         LINE#         228
+  C:0A0EH         LINE#         229
+  C:0A11H         LINE#         230
+  C:0A23H         LINE#         231
+  C:0A26H         LINE#         232
+  C:0A26H         LINE#         233
+  C:0A29H         LINE#         236
+  C:0A29H         LINE#         237
+  C:0A3CH         LINE#         238
+  C:0A3FH         LINE#         240
+  C:0A56H         LINE#         241
+  C:0A6DH         LINE#         242
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 7
+
+
+  C:0A84H         LINE#         243
+  C:0A9EH         LINE#         244
+  C:0ABAH         LINE#         246
+  C:0ABDH         LINE#         247
+  C:0ABDH         LINE#         249
+  -------         ENDPROC       SETMOTORPWM
+  -------         PROC          _SETLEDPWM
+  X:0046H         SYMBOL        color
+  C:0ABEH         LINE#         251
+  C:0AC6H         LINE#         262
+  C:0AC9H         LINE#         263
+  C:0AD4H         LINE#         264
+  C:0AD4H         LINE#         265
+  C:0AD4H         LINE#         266
+  C:0AD4H         LINE#         267
+  C:0AD4H         LINE#         268
+  C:0AD6H         LINE#         270
+  C:0AE2H         LINE#         271
+  C:0AEEH         LINE#         272
+  C:0AEEH         LINE#         273
+  C:0AEEH         LINE#         274
+  C:0AEEH         LINE#         275
+  C:0AEEH         LINE#         276
+  C:0AF0H         LINE#         278
+  C:0AFCH         LINE#         279
+  C:0B0AH         LINE#         280
+  C:0B0DH         LINE#         281
+  C:0B0FH         LINE#         282
+  C:0B0FH         LINE#         283
+  C:0B0FH         LINE#         284
+  C:0B11H         LINE#         287
+  C:0B1DH         LINE#         288
+  C:0B2AH         LINE#         289
+  C:0B2DH         LINE#         290
+  C:0B38H         LINE#         291
+  C:0B3AH         LINE#         292
+  C:0B3AH         LINE#         293
+  C:0B3CH         LINE#         295
+  C:0B48H         LINE#         296
+  C:0B57H         LINE#         297
+  C:0B5AH         LINE#         298
+  C:0B65H         LINE#         299
+  C:0B70H         LINE#         300
+  C:0B73H         LINE#         301
+  C:0B73H         LINE#         304
+  -------         ENDPROC       _SETLEDPWM
+  -------         PROC          UART_INIT
+  C:0E95H         LINE#         313
+  C:0E95H         LINE#         314
+  C:0E95H         LINE#         317
+  C:0E98H         LINE#         318
+  C:0E9BH         LINE#         319
+  C:0E9EH         LINE#         320
+  C:0EA1H         LINE#         321
+  C:0EA4H         LINE#         322
+  C:0EA7H         LINE#         324
+  -------         ENDPROC       UART_INIT
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 8
+
+
+  -------         PROC          CLOCK_INIT
+  C:0EACH         LINE#         328
+  C:0EACH         LINE#         329
+  C:0EACH         LINE#         332
+  -------         ENDPROC       CLOCK_INIT
+  -------         PROC          PORT_INIT
+  C:0DE9H         LINE#         334
+  C:0DE9H         LINE#         335
+  C:0DE9H         LINE#         345
+  C:0DECH         LINE#         346
+  C:0DEFH         LINE#         347
+  C:0DF1H         LINE#         348
+  C:0DF3H         LINE#         349
+  C:0DF5H         LINE#         351
+  C:0DF8H         LINE#         352
+  C:0DFAH         LINE#         353
+  C:0DFCH         LINE#         354
+  C:0DFEH         LINE#         355
+  C:0E00H         LINE#         357
+  C:0E03H         LINE#         358
+  C:0E05H         LINE#         359
+  C:0E07H         LINE#         360
+  C:0E09H         LINE#         362
+  C:0E0CH         LINE#         363
+  C:0E0EH         LINE#         364
+  C:0E10H         LINE#         365
+  C:0E12H         LINE#         368
+  C:0E14H         LINE#         369
+  C:0E16H         LINE#         370
+  C:0E18H         LINE#         371
+  C:0E1AH         LINE#         372
+  C:0E1DH         LINE#         373
+  -------         ENDPROC       PORT_INIT
+  -------         PROC          MAIN
+  -------         DO            
+  X:0044H         SYMBOL        i
+  -------         ENDDO         
+  C:0951H         LINE#         377
+  C:0951H         LINE#         378
+  C:0951H         LINE#         381
+  C:0954H         LINE#         382
+  C:0957H         LINE#         383
+  C:095AH         LINE#         384
+  C:095DH         LINE#         385
+  C:0971H         LINE#         386
+  C:0974H         LINE#         387
+  C:0977H         LINE#         388
+  C:097AH         LINE#         389
+  C:097DH         LINE#         393
+  C:0980H         LINE#         395
+  C:0983H         LINE#         397
+  C:0983H         LINE#         398
+  C:0983H         LINE#         399
+  C:0990H         LINE#         400
+  C:0993H         LINE#         403
+  C:09A4H         LINE#         404
+  C:09A4H         LINE#         405
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  07/29/2021  11:01:12  PAGE 9
+
+
+  C:09BCH         LINE#         406
+  C:09BCH         LINE#         407
+  C:09BCH         LINE#         408
+  C:09BFH         LINE#         409
+  C:09C1H         LINE#         410
+  C:09C1H         LINE#         411
+  C:09C5H         LINE#         412
+  C:09C7H         LINE#         413
+  C:09C7H         LINE#         414
+  C:09CBH         LINE#         415
+  C:09CDH         LINE#         416
+  C:09CDH         LINE#         417
+  C:09D1H         LINE#         418
+  C:09D3H         LINE#         419
+  C:09D3H         LINE#         420
+  C:09DAH         LINE#         421
+  C:09DAH         LINE#         423
+  C:09DAH         LINE#         424
+  C:09DAH         LINE#         426
+  C:09F2H         LINE#         427
+  C:09F2H         LINE#         428
+  C:09F5H         LINE#         429
+  C:09F8H         LINE#         430
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        MAIN
+
+  -------         MODULE        ?C?ISTPTR
+  C:0D9DH         PUBLIC        ?C?ISTPTR
+  -------         ENDMOD        ?C?ISTPTR
+
+  -------         MODULE        ?C?ISTOPTR
+  C:0DBCH         PUBLIC        ?C?ISTOPTR
+  -------         ENDMOD        ?C?ISTOPTR
+
+******************************************************************************
+* RESTRICTED VERSION WITH 0800H BYTE CODE SIZE LIMIT; USED: 05E3H BYTE (73%) *
+******************************************************************************
+
+Program Size: data=9.0 xdata=80 code=1712
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

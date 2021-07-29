@@ -58,6 +58,7 @@ PWMINFO 	_pwm[PWM_CH_NUM];
 
 
 static char _pwm_out;
+static char pin15;
 
 
 void UART1_Clear()
@@ -172,9 +173,28 @@ void pwm_control_LED()
 	}
 
 	
-	//P1 &= 0xFF;
-	P1 |= _pwm_out; 
+	
+	
+	_pwm_out |= 0xF1; // init p10 
+	pin15 = P1 & 0xF0;
+	
+	P1 = ( pin15 | ~_pwm_out);
 
+	
+	/*
+	  ex) pin 13, 12 high, 11 low 00001100
+	       _pwm_out = 0b11111101
+	      ~_pwm_out = 0b00000010
+	      
+				if P15 low:
+				 pin 15 = 0b00100000
+	       P1     = 0b00100010
+	
+				else (P15 high):
+				 pin 15 = 0b00000000
+				 P1 = 0b00000010	
+	
+	*/
 	
 }
 
@@ -233,14 +253,14 @@ void setMotorPWM()
 void setLedPWM(int color) { 
 	
 	/* 
-	B : On
-	G : Good
-	Y : So So
-	M : Bad
-	R : very Bad
+		B : On
+		G : Good
+		Y : So So
+		M : Bad
+		R : very Bad
 	
 	*/
-	
+
 	if(color == 0){ // B : on
 		pwm_enable(-1, 1, 1, 0);
 		pwm_setup_control( PWM1_FLAG, PWM_CTL_DEC );
@@ -370,8 +390,7 @@ void main()
 	pwm_control_LED();
 	sei();          	// enable INT.
 
-	asd = 0;
-	
+
 	// TODO: add your main code here
 	UARTDR = 0xFF;
 	

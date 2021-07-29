@@ -1,0 +1,6 @@
+"startup.obj",
+"main.obj" 
+TO "MC96F8316" 
+RAMSIZE(256) 
+CODE( 0X0000-0X3FFF )
+XDATA( 0X0000-0X01FF )
