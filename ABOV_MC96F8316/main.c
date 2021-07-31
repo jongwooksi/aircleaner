@@ -83,9 +83,9 @@ void pwm_init()
 {
 
 	pwm_setup( &_pwm[0], 10, 0 ); // 35
-	pwm_setup( &_pwm[1], 10, 5 ); // 11
-	pwm_setup( &_pwm[2], 10, 5 ); // 12
-	pwm_setup( &_pwm[3], 10, 5 ); // 13
+	pwm_setup( &_pwm[1], 12, 4 ); // 11
+	pwm_setup( &_pwm[2], 12, 8 ); // 12
+	pwm_setup( &_pwm[3], 12, 12 ); // 13
 
 }
 
@@ -110,21 +110,32 @@ void pwm_setup_control( unsigned int pwmflag, unsigned int ctl )
 
 
 //======================================================
+static char _pwm_out_motor;
+
 void pwm_control_Motor()
 {
+	_pwm_out_motor = 0;
 	// PWM Motor
 	if( _pwm[0].count < _pwm[0].duty && (_pwm_mask & PWM0_FLAG) ) {
-		P3 = 0x20;	// P35
+		_pwm_out_motor |= 0x20;	// P35
+		P3 |= _pwm_out_motor;
 	}
 
+	else
+	{
+		P3 &= 0xDF;
+	}
+	
 	_pwm[0].count++;
 
 	
 	if( _pwm[0].count >= _pwm[0].period ) {
 		_pwm[0].count = 0;
 		_pwm[0].duty  = _pwm[0].next_duty;
-		P3 = 0x00;
+		
 	}
+	
+
 }
 
 
@@ -148,7 +159,8 @@ void pwm_control_LED()
 
 	// PWM 2
 	if( _pwm[2].count < _pwm[2].duty && (_pwm_mask & PWM2_FLAG) ) {
-		_pwm_out |= 0x04;	// P12
+		if( _pwm[2].count >= 4)
+			_pwm_out |= 0x04;	// P12
 	}
 
 	_pwm[2].count++;
@@ -161,7 +173,8 @@ void pwm_control_LED()
 
 	// PWM 3
 	if( _pwm[3].count < _pwm[3].duty && (_pwm_mask & PWM3_FLAG) ) {
-		_pwm_out |= 0x08;	// P13
+		if( _pwm[3].count >= 8)
+			_pwm_out |= 0x08;	// P13
 	}
 
 	_pwm[3].count++;
@@ -378,7 +391,7 @@ static unsigned int _COLOR_LOOP_INDEX = 0;
 	
 void main()
 {
-	int i;
+	//int i;
 	
 	cli();          	// disable INT. during peripheral setting
 	port_init();    	// initialize ports
@@ -414,7 +427,7 @@ void main()
 		if (((UARTDR & 0xF0) >> 4) < 0x05)
 		{
 			switch ((UARTDR & 0xF0) >> 4)
-				{
+			{
 				case 0x00: 
 					setLedPWM(0); 
 					break;
@@ -434,13 +447,15 @@ void main()
 			}
 		}
 		
+		pwm_control_Motor();
+		pwm_control_LED();
+		
 		/*
-		0F : Motor Power On
-		1F : Motor Power 1
-		2F : Motor Power 2
-		3F : Motor Power 3
-		4F : Motor Power 4
-		5F : Motor Power 5 (Max)
+		0F : LED Power On
+		1F : Dust Good
+		2F : Dust So So
+		3F : Dust Bad
+		4F : Dust Very Bad  (Max)
 		*/
 		
 		
@@ -477,7 +492,7 @@ void main()
 		}
 		if (_COLOR_LOOP_INDEX == 4)
 			_COLOR_LOOP_INDEX = 0;
-		*/
+		
 		
 		for (i= 0; i < 10; i++)
 		{
@@ -485,7 +500,7 @@ void main()
 			pwm_control_LED();
 		}
 		
-		
+		*/
 		
 		
 	}
