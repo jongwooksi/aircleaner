@@ -1,9 +1,6 @@
-
-
 #include <SPI.h>
 #include <SD.h>
 #include <FS.h>
-//#include <esp_camera.h>
 #include <HTTPClient.h>
 #include <LovyanGFX.hpp>
 #include "makerfabs_pin.h"
@@ -46,7 +43,7 @@ WiFiClient client;
 #define DUST_OFF_TX digitalWrite(DUST_RX, LOW)
 
 #define PWM_TX 19
-#define PWM_RX 18
+#define PWM_RX 18+-0
 #define PWM_ON_TX digitalWrite(PWM_TX, HIGH)
 #define PWM_OFF_RX digitalWrite(PWM_RX, LOW)
 #define PWM_ON_RX digitalWrite(PWM_TX, HIGH)
@@ -74,7 +71,7 @@ static lv_disp_buf_t disp_buf;
 TaskHandle_t ntScanTaskHandler;
 TaskHandle_t ntConnectTaskHandler;
 TaskHandle_t gui_task;
-
+TaskHandle_t mnTaskHandler;
 //String ssid, password;
 const char* remote_host = "www.google.com";
 unsigned long timeout = 10000; // 10sec
@@ -152,7 +149,7 @@ const char *bars[2] =
 
 String ssid = "";
 String password = "";
-
+String sd_id = "";
 int updatecount = 0;
 
 int PM10 = -1;
@@ -180,6 +177,7 @@ void loop()
 {
   if (conn == 1)
   {
+   // Serial.println("in");
     get_pos(pos);
     pos_rotation(pos, SCRENN_ROTATION);
     touchDisplaySet();
@@ -219,7 +217,18 @@ void loop()
        
     }
   }
-  
+
+  else if (conn == 3){
+    vTaskDelay(500);
+    vTaskDelete(gui_task);
+    delay(500);
+    conn = 1;
+    Serial.println("in2");
+    ESP.restart();
+    Serial.println("in3");
+    
+    
+  }
 }
 
 bool checkDateWash()
@@ -238,8 +247,8 @@ void setBackground()
   delay(10);
     
   if (stage == 0) // main
-    print_img(SD, "/back.bmp", 480, 320);
-
+    //print_img(SD, "/back.bmp", 480, 320);
+    print_img(SD, "/test.bmp", 480, 320);
   else if (stage == 1)// setting
     print_img(SD, "/setting.bmp", 480, 320);
 
@@ -613,7 +622,7 @@ void setTime()
   Serial.println("\nWaiting for time");
   
   while (!time(nullptr)){
-    Serial.print(".");
+    //Serial.print(".");
     delay(100);
   }
   
@@ -756,6 +765,9 @@ void checkDust()
 
         DUST_OFF_TX;
         DUST_OFF_RX;
+
+        sendDustValue();
+        
         break;
       }    
     }
@@ -769,37 +781,70 @@ void ABOVBoard_init()
 void sendDustValue()
 {
   if ( (PM10 >= 0 ) && (PM10 < 30 )) // good
-    ABOVBoard.write((byte)0x1F);
+  {
+     tft.setCursor(180, 270);
+     tft.println("GOOD");
+     ABOVBoard.write((byte)0xF1);
+     ABOVBoard.write((byte)0xF1);
+  }
+
   else if ( (PM10 >= 30 ) && (PM10 < 80 )) // soso
-    ABOVBoard.write((byte)0x2F);
+   {
+     tft.setCursor(180, 270);
+     tft.println("SO SO");
+     ABOVBoard.write((byte)0xF2);
+     ABOVBoard.write((byte)0xF2);
+  }
   else if ( (PM10 >= 80 ) && (PM10 < 150 )) // bad
-    ABOVBoard.write((byte)0x3F);
+  {
+     tft.setCursor(180, 270);
+     tft.println("BAD");
+     ABOVBoard.write((byte)0xF3);
+     ABOVBoard.write((byte)0xF3);
+  }
   else if ( PM10 >= 150 ) // very bad
-    ABOVBoard.write((byte)0x4F);
+   {
+     tft.setCursor(180, 270);
+     tft.println("VERY BAD");
+     ABOVBoard.write((byte)0xF4);
+     ABOVBoard.write((byte)0xF4);
+  }
+  
   else if ( PM10 == -1 ) // power on
-    ABOVBoard.write((byte)0x0F);
+    ABOVBoard.write((byte)0xF0);
   
 }
 void checkAbovPWM()
 {
+
+  byte sendData = (byte)volume ;
+
+  Serial.println(sendData);
+  //Serial.println(type(sendData));
+  //Serial.println(type(sendData));
   
-  if (volume == 0)
-    ABOVBoard.write((byte)0xF0);
-
-  else if (volume == 1)
-    ABOVBoard.write((byte)0xF1);
-
-  else if (volume == 2)
-    ABOVBoard.write((byte)0xF2);
-
-  else if (volume == 3)
-    ABOVBoard.write((byte)0xF3);
+   
+  ABOVBoard.write(sendData);
+  ABOVBoard.write(sendData);
   
-  else if (volume == 4)
-    ABOVBoard.write((byte)0xF4);
-
-  else if (volume == 5)
-    ABOVBoard.write((byte)0xF5);
+  
+//  if (volume == 0)
+//    ABOVBoard.write((byte)0x01);
+//
+//  else if (volume == 1)
+//    ABOVBoard.write((byte)0x02);
+//
+//  else if (volume == 2)
+//    ABOVBoard.write((byte)0x04);
+//
+//  else if (volume == 3)
+//    ABOVBoard.write((byte)0x08);
+//  
+//  else if (volume == 4)
+//    ABOVBoard.write((byte)0x10);
+//
+//  else if (volume == 5)
+//    ABOVBoard.write((byte)0x20);
 
 
 
@@ -885,7 +930,7 @@ void wifi_init()
     //while (WiFi.status() != WL_CONNECTED)
     for (int i = 0; i < 300; i++)
     {
-        Serial.print(".");
+        //Serial.print(".");
         delay(50);
 
         if (WiFi.status() == WL_CONNECTED)
@@ -904,7 +949,7 @@ void wifi_init()
       tft.setRotation(1);
       SPI_OFF_TFT;
       delay(10);
-      print_img(SD, "/back.bmp", 480, 320);
+      print_img(SD, "/test.bmp", 480, 320);
       SPI_ON_TFT;
       delay(1000);
       tft.setRotation(3);
@@ -922,8 +967,9 @@ void wifi_init()
       Serial.println("disconnecting from server.");
   
       client.stop();
-    
+      WiFi.mode(WIFI_OFF);
       conn = 0;
+      
       wifi_setup(); 
       //drawConnect();
       
@@ -1139,6 +1185,10 @@ int setWifi(fs::FS &fs)
    
     while(f.available()){
       char temp = f.read();
+      if ( temp=='\n')
+      {
+        break;
+      }
       ssid += temp; 
     }
 
@@ -1184,17 +1234,17 @@ void draw_button()
       tft.setTextColor(TFT_WHITE);
       tft.setTextSize(1.5);
     
-      tft.setCursor(340, 50);
-      tft.println("Air pollution");
+      //tft.setCursor(340, 50);
+      //tft.println("공기질");
+     
+      //tft.setCursor(340, 120);
+      //tft.println(" Indoor Dust");
   
-      tft.setCursor(340, 120);
-      tft.println(" Indoor Dust");
-  
-      tft.setCursor(340, 190);
-      tft.println("  Pan Motor");
+      //tft.setCursor(340, 190);
+      //tft.println("  Pan Motor");
   
       tft.setCursor(340, 260);
-      tft.println("   Setting");
+      //tft.println("   Setting");
     }
     
     else if (stage == 3)
@@ -1237,8 +1287,8 @@ void show_log(int cmd_type)
       case 3:
           tft.fillRect(160, 160, 160, 160, TFT_WHITE);
 
-          if (volume == 5)
-            volume = -1;
+          if (volume == 100)
+            volume = 0;
 
           volume++;
           
@@ -1541,7 +1591,8 @@ void wifi_setup() {
   }  
 
   
-
+  ssid = "";
+  password = "";
   
   xTaskCreate(guiTask, "gui", 4096*2, NULL,2,&gui_task);
 
@@ -1849,6 +1900,8 @@ static void mbox_event_handler(lv_obj_t * obj, lv_event_t event){
 
             connectWIFI();
 
+ 
+            
           }
 
     
@@ -1937,30 +1990,65 @@ void connectWIFI(){
 
   vTaskDelete(ntScanTaskHandler);
   vTaskDelay(500);
-  xTaskCreate(beginWIFITask,"BeginWIFITask", 4096, NULL, 0,&ntConnectTaskHandler);                
-
+  xTaskCreate(beginWIFITask,"beginWIFITask", 4096, NULL, 0,&ntConnectTaskHandler);                
+  
 
 }
 
 
-void checkWIFI()
+
+void checkWIFI(fs::FS &fs)
 {
   if(WiFi.status() == WL_CONNECTED) 
   {
     String wifiIdFile = "/wifiId.txt";
     String wifiPwFile = "/wifiPw.txt";
-    
+    //String test_id = ssid.substring(0,(ssid.length()));
     SPI_ON_SD;
+    
+    File newwifiid = fs.open(wifiIdFile, "w");
 
+      if (newwifiid) {
+       Serial.println(ssid.c_str());
+       newwifiid.print(ssid.c_str());
+      }else {
+       Serial.println("ID ERROR");
+      }
+     delay(2000); 
+    newwifiid.close();
+    File newwifipw = fs.open(wifiPwFile, "w");
+
+      if (newwifipw) {
+      Serial.println(password.c_str());
+      newwifipw.print(password.c_str());
+      }else {
+       Serial.println("pw ERROR");
+      }
+      delay(2000);     
+    newwifipw.close();
+   // Serial.println("0");
+   // Serial.println("0.1");
+    //delay(2000);
     // 파일에다가 쓰고 Rebooting
     // ssid랑 password를 위에 파일에 기입하면 됨
     // read한 부분은 setwifi() 함수를 참고
-    
+    // Serial.println("1.1");
+    //vTaskDelay(5000);
+    //delay(2000);
+    //delay(5000);
+         
     SPI_OFF_SD;
+     Serial.println("1.2");
+     //delay(1000);
+     //vTaskDelay(2500);
 
+     conn =3;
+     //vTaskDelete(gui_task);
+     
+     vTaskDelete(ntConnectTaskHandler);
+      
   }
 }
-
 
 
 void beginWIFITask(void *pvParameters) {
@@ -1969,6 +2057,7 @@ void beginWIFITask(void *pvParameters) {
 
   unsigned long startingTime = millis();
 
+  //sd_id = ssid;
   WiFi.begin(ssid.c_str(), password.c_str());
 
   while (WiFi.status() != WL_CONNECTED && (millis() - startingTime) < timeout)
@@ -1994,8 +2083,10 @@ void beginWIFITask(void *pvParameters) {
  
   updateBottomStatus(LV_COLOR_GREEN, "WIFI is Connected! Local IP: " +  WiFi.localIP().toString());
 
-  checkWIFI();
+  checkWIFI(SD);
   
-
+  Serial.println("hihihihi");
+  //ESP.restart();
+ //vTaskDelete(ntConnectTaskHandler);
 
 }
