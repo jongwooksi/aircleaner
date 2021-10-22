@@ -249,17 +249,17 @@ void setBackground()
   if (stage == 0) // main
     //print_img(SD, "/back.bmp", 480, 320);
     print_img(SD, "/test.bmp", 480, 320);
-  else if (stage == 1)// setting
-    print_img(SD, "/setting.bmp", 480, 320);
+  //else if (stage == 1)// setting
+  //  print_img(SD, "/setting.bmp", 480, 320);
 
-  else if (stage == 2) // calender
-    tft.fillScreen(TFT_WHITE);
+  //else if (stage == 2) // calender
+  //  tft.fillScreen(TFT_WHITE);
   
-  else if (stage == 3) // wash
-    print_img(SD, "/wash.bmp", 480, 320);
+  //else if (stage == 3) // wash
+  //  print_img(SD, "/wash.bmp", 480, 320);
   
-  else if (stage == 4) // information
-    tft.fillScreen(TFT_WHITE);
+  //else if (stage == 4) // information
+ //   tft.fillScreen(TFT_WHITE);
     
   SPI_ON_TFT;
   delay(100);
@@ -667,7 +667,7 @@ void drawTime()
   if(timeinfo->tm_min<10)      date[4]="0"+date[4];
   if(timeinfo->tm_hour<10)     date[3]="0"+date[3];
   if(timeinfo->tm_mday<10)     date[2]="0"+date[2];
-  if(timeinfo->tm_mon<10)      date[1]="0"+date[1];
+  if(timeinfo->tm_mon<9)      date[1]="0"+date[1];
   
 
   tft.drawString(date[0]+"-", 20, 300);
@@ -700,6 +700,8 @@ void dustSensor_init()
 
 void checkDust()
 {
+  int dustcount = 0;
+  
   while (1)
   {
       DUST_ON_TX;
@@ -708,10 +710,16 @@ void checkDust()
       unsigned char  pms[32];
       tft.fillRect(160, 160, 160, 160, TFT_WHITE);
       tft.setCursor(180, 180);
-      tft.println(dustSensor.available());
+      //tft.println(dustSensor.available());
       tft.setTextColor(TFT_RED);
       tft.setTextSize(2);
       delay(100);
+      dustcount ++;
+      if (dustcount == 10)
+      {
+        tft.println("Error");
+        break;
+      }
       if(dustSensor.available()>=32){
         int dustlength = dustSensor.available();
         int check = 0;
@@ -778,40 +786,70 @@ void ABOVBoard_init()
   ABOVBoard.begin(9600);
 }
 
+void checkABOVBoard(byte sendData)
+{
+  byte tempSendData = 0x2F;
+  
+  ABOVBoard.write(tempSendData);
+
+  int checkcount = 0;
+  
+  while (1)
+  {
+    if (checkcount == 10)
+      break;
+      
+    byte checkdata = ABOVBoard.read();
+    Serial.println(checkdata);
+    
+    if (checkdata == tempSendData)
+    {
+      Serial.println("success");
+      break;
+    }
+    else
+    {
+      ABOVBoard.write(tempSendData);
+      checkcount ++;
+    }
+   
+  }
+  
+  
+}
 void sendDustValue()
 {
   if ( (PM10 >= 0 ) && (PM10 < 30 )) // good
   {
      tft.setCursor(180, 270);
      tft.println("GOOD");
-     ABOVBoard.write((byte)0xF1);
-     ABOVBoard.write((byte)0xF1);
+     checkABOVBoard((byte)0xF1);
   }
 
   else if ( (PM10 >= 30 ) && (PM10 < 80 )) // soso
    {
      tft.setCursor(180, 270);
      tft.println("SO SO");
-     ABOVBoard.write((byte)0xF2);
-     ABOVBoard.write((byte)0xF2);
+     checkABOVBoard((byte)0xF2);
+     
   }
   else if ( (PM10 >= 80 ) && (PM10 < 150 )) // bad
   {
      tft.setCursor(180, 270);
      tft.println("BAD");
-     ABOVBoard.write((byte)0xF3);
-     ABOVBoard.write((byte)0xF3);
+     checkABOVBoard((byte)0xF3);
+     
   }
   else if ( PM10 >= 150 ) // very bad
    {
      tft.setCursor(180, 270);
      tft.println("VERY BAD");
-     ABOVBoard.write((byte)0xF4);
-     ABOVBoard.write((byte)0xF4);
+     checkABOVBoard((byte)0xF4);
+    
   }
   
   else if ( PM10 == -1 ) // power on
-    ABOVBoard.write((byte)0xF0);
+     checkABOVBoard((byte)0xF0);
   
 }
 void checkAbovPWM()
@@ -824,8 +862,8 @@ void checkAbovPWM()
   //Serial.println(type(sendData));
   
    
-  ABOVBoard.write(sendData);
-  ABOVBoard.write(sendData);
+  checkABOVBoard(sendData);
+
   
   
 //  if (volume == 0)
